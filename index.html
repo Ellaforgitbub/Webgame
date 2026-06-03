@@ -1,0 +1,329 @@
+  <!DOCTYPE html>
+  <html lang="zh-TW">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>🎮 遊戲大廳</title>
+      <style>
+          * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+          }
+
+          body {
+              min-height: 100vh;
+              background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460
+  100%);
+              font-family: 'Segoe UI', Arial, sans-serif;
+              overflow-x: hidden;
+          }
+
+          /* ===== 主選單 ===== */
+          #menu {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              padding: 40px 20px;
+          }
+
+          .logo {
+              font-size: 3.5rem;
+              color: #fff;
+              margin-bottom: 10px;
+              text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+              animation: float 3s ease-in-out infinite;
+          }
+
+          @keyframes float {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-10px); }
+          }
+
+          .subtitle {
+              color: rgba(255, 255, 255, 0.6);
+              font-size: 1.1rem;
+              margin-bottom: 50px;
+              letter-spacing: 3px;
+          }
+
+          .game-cards {
+              display: flex;
+              gap: 30px;
+              flex-wrap: wrap;
+              justify-content: center;
+          }
+
+          .card {
+              width: 280px;
+              background: rgba(255, 255, 255, 0.08);
+              backdrop-filter: blur(10px);
+              border-radius: 20px;
+              padding: 30px;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              position: relative;
+              overflow: hidden;
+          }
+
+          .card::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              height: 4px;
+              background: linear-gradient(90deg, var(--accent1), var(--accent2));
+              opacity: 0;
+              transition: opacity 0.3s;
+          }
+
+          .card:hover::before {
+              opacity: 1;
+          }
+
+          .card:hover {
+              transform: translateY(-10px);
+              background: rgba(255, 255, 255, 0.12);
+              box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+          }
+
+          .card-icon {
+              width: 80px;
+              height: 80px;
+              margin: 0 auto 20px;
+              border-radius: 16px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 2.5rem;
+          }
+
+          .card[data-game="2048"] { --accent1: #edc22e; --accent2: #f59563; }
+          .card[data-game="2048"] .card-icon { background: linear-gradient(135deg,
+  #edc22e, #f59563); }
+
+          .card[data-game="snake"] { --accent1: #4ade80; --accent2: #22c55e; }
+          .card[data-game="snake"] .card-icon { background: linear-gradient(135deg,
+  #4ade80, #22c55e); }
+
+          .card[data-game="maze"] { --accent1: #8b7aa0; --accent2: #8866aa; }
+          .card[data-game="maze"] .card-icon { background: linear-gradient(135deg,
+  #8b7aa0, #8866aa); }
+
+          .card[data-game="minesweeper"] { --accent1: #ef4444; --accent2: #dc2626; }
+          .card[data-game="minesweeper"] .card-icon { background:
+  linear-gradient(135deg, #ef4444, #dc2626); }
+
+          .card-title {
+              color: #fff;
+              font-size: 1.5rem;
+              font-weight: bold;
+              margin-bottom: 10px;
+              text-align: center;
+          }
+
+          .card-desc {
+              color: rgba(255, 255, 255, 0.6);
+              font-size: 0.9rem;
+              text-align: center;
+              line-height: 1.6;
+          }
+
+          .card-hint {
+              color: rgba(255, 255, 255, 0.4);
+              font-size: 0.75rem;
+              text-align: center;
+              margin-top: 20px;
+              opacity: 0;
+              transition: opacity 0.3s;
+          }
+
+          .card:hover .card-hint {
+              opacity: 1;
+          }
+
+          /* ===== 遊戲區域 ===== */
+          #gameArea {
+              display: none;
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: #000;
+          }
+
+          #gameFrame {
+              width: 100%;
+              height: 100%;
+              border: none;
+          }
+
+          #backBtn {
+              position: fixed;
+              top: 20px;
+              left: 20px;
+              z-index: 100;
+              background: rgba(139, 122, 160, 0.9);
+              border: 2px solid rgba(200, 180, 220, 0.6);
+              color: #fff;
+              padding: 12px 24px;
+              border-radius: 30px;
+              cursor: pointer;
+              font-size: 1rem;
+              backdrop-filter: blur(10px);
+              transition: all 0.3s;
+              display: none;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+          }
+
+          #backBtn:hover {
+              background: rgba(160, 140, 180, 0.95);
+              transform: scale(1.05);
+              box-shadow: 0 6px 20px rgba(139, 122, 160, 0.4);
+          }
+
+          #backBtn::before {
+              content: '← ';
+          }
+
+          /* 載入動畫 */
+          .loading {
+              display: none;
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              color: #fff;
+              font-size: 1.5rem;
+          }
+
+          @keyframes spin {
+              to { transform: rotate(360deg); }
+          }
+      </style>
+  </head>
+  <body>
+      <!-- 主選單 -->
+      <div id="menu">
+          <div class="logo">🎮 遊戲大廳</div>
+          <div class="subtitle">GAME LOBBY</div>
+
+          <div class="game-cards">
+              <div class="card" data-game="2048">
+                  <div class="card-icon">🔢</div>
+                  <div class="card-title">2048</div>
+                  <div class="card-desc">
+                      經典滑塊益智遊戲<br>
+                      合併數字，挑戰 2048！
+                  </div>
+                  <div class="card-hint">點擊進入遊戲</div>
+              </div>
+
+              <div class="card" data-game="snake">
+                  <div class="card-icon">🐍</div>
+                  <div class="card-title">貪吃蛇</div>
+                  <div class="card-desc">
+                      操控蛇吃遍美食<br>
+                      考驗你的反應速度！
+                  </div>
+                  <div class="card-hint">點擊進入遊戲</div>
+              </div>
+
+              <div class="card" data-game="maze">
+                  <div class="card-icon">👹</div>
+                  <div class="card-title">逃出深淵</div>
+                  <div class="card-desc">
+                      在黑暗中甦醒<br>
+                      逃離怪物的追擊！
+                  </div>
+                  <div class="card-hint">點擊進入遊戲</div>
+              </div>
+
+              <div class="card" data-game="minesweeper">
+                  <div class="card-icon">💣</div>
+                  <div class="card-title">踩地雷</div>
+                  <div class="card-desc">
+                      經典掃雷益智遊戲<br>
+                      小心！每一步都可能是最後一步！
+                  </div>
+                  <div class="card-hint">點擊進入遊戲</div>
+              </div>
+          </div>
+      </div>
+
+      <!-- 遊戲區域 -->
+      <div id="gameArea">
+          <iframe id="gameFrame"></iframe>
+      </div>
+
+      <button id="backBtn">返回大廳</button>
+      <div class="loading" id="loading">載入中...</div>
+
+      <script>
+          const menu = document.getElementById('menu');
+          const gameArea = document.getElementById('gameArea');
+          const gameFrame = document.getElementById('gameFrame');
+          const backBtn = document.getElementById('backBtn');
+          const loading = document.getElementById('loading');
+          const cards = document.querySelectorAll('.card');
+
+          const gameFiles = {
+              '2048': '2048.html',
+              'snake': 'snake.html',
+              'maze': 'maze.html',
+              'minesweeper': 'minesweeper.html'
+          };
+
+          function openGame(gameName) {
+              // 顯示載入中
+              loading.style.display = 'block';
+
+              // 隱藏選單，顯示遊戲區域
+              menu.style.display = 'none';
+              gameArea.style.display = 'block';
+              backBtn.style.display = 'block';
+
+              // 載入遊戲
+              gameFrame.src = gameFiles[gameName];
+
+              // iframe 載入完成後隱藏載入動畫
+              gameFrame.onload = function() {
+                  loading.style.display = 'none';
+              };
+          }
+
+          function closeGame() {
+              // 顯示選單，隱藏遊戲區域
+              menu.style.display = 'flex';
+              gameArea.style.display = 'none';
+              backBtn.style.display = 'none';
+
+              // 清除 iframe
+              gameFrame.src = '';
+          }
+
+          // 卡片點擊事件
+          cards.forEach(card => {
+              card.addEventListener('click', () => {
+                  const gameName = card.dataset.game;
+                  openGame(gameName);
+              });
+          });
+
+          // 返回按鈕
+          backBtn.addEventListener('click', closeGame);
+
+          // ESC 鍵返回
+          document.addEventListener('keydown', e => {
+              if (e.key === 'Escape' && gameArea.style.display === 'block') {
+                  closeGame();
+              }
+          });
+      </script>
+  </body>
+  </html>

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逃出深淵 - Escape the Abyss</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght=700&family=Noto+Sans+TC:wght=400;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050508;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Noto Sans TC', sans-serif;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #gameCanvas {
+            border: 3px solid #1a0a2e;
+            border-radius: 8px;
+            box-shadow:
+                0 0 30px rgba(75, 0, 130, 0.5),
+                inset 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+
+        #ui {
+            color: #8b7aa0;
+            font-size: 14px;
+            text-align: center;
+            letter-spacing: 2px;
+            min-height: 40px;
+        }
+
+        #instructions {
+            color: #5a4a6a;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .key {
+            display: inline-block;
+            background: #1a0a2e;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin: 0 3px;
+            border: 1px solid #3d1a5c;
+        }
+
+        /* ===== 角色選擇 Modal ===== */
+        #characterModal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 5, 8, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        #characterModal h2 {
+            color: #c9b8d9;
+            font-family: 'Cinzel', serif;
+            font-size: 28px;
+            text-shadow: 0 0 20px #8866aa;
+        }
+
+        .character-grid {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .character-card {
+            width: 160px;
+            height: 200px;
+            background: rgba(26, 15, 46, 0.8);
+            border: 2px solid #3d1a5c;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .character-card:hover {
+            transform: translateY(-8px);
+            border-color: #8866aa;
+            box-shadow: 0 10px 30px rgba(136, 102, 170, 0.4);
+        }
+
+        .character-card.selected {
+            border-color: #ffaa44;
+            box-shadow: 0 0 25px rgba(255, 170, 68, 0.5);
+        }
+
+        .character-preview {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .character-name {
+            color: #c9b8d9;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .character-desc {
+            color: #665577;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        #confirmBtn {
+            background: linear-gradient(135deg, #8866aa, #664488);
+            border: none;
+            color: #fff;
+            padding: 15px 50px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Noto Sans TC', sans-serif;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(136, 102, 170, 0.4);
+        }
+
+        #confirmBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(136, 102, 170, 0.6);
+        }
+
+        #confirmBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="characterModal">
+        <h2>選擇你的角色</h2>
+        <div class="character-grid">
+            <div class="character-card selected" data-char="candle">
+                <div class="character-preview">
+                    <svg width="60" height="60" viewBox="0 0 60 60">
+                        <defs>
+                            <radialGradient id="candleGlow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#ffdd88"/>
+                                <stop offset="100%" stop-color="#ffaa44"/>
+                            </radialGradient>
+                        </defs>
+                        <rect x="25" y="30" width="10" height="20" fill="#f5f5dc" rx="2"/>
+                        <ellipse cx="30" cy="22" rx="8" ry="12" fill="url(#candleGlow)"/>
+                        <ellipse cx="30" cy="24" rx="4" ry="6" fill="#fff8dc"/>
+                    </svg>
+                </div>
+                <div class="character-name">執燭者</div>
+                <div class="character-desc">火光微弱但穩定<br>照亮前方的道路</div>
+            </div>
+
+            <div class="character-card" data-char="crystal">
+                <div class="character-preview">
+                    <svg width="60" height="60" viewBox="0 0 60 60">
+                        <defs>
+                            <linearGradient id="crystalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#88ddff"/>
+                                <stop offset="100%" stop-color="#4488cc"/>
+                            </linearGradient>
+                        </defs>
+                        <polygon points="30,8 45,25 40,50 20,50 15,25" fill="url(#crystalGrad)" opacity="0.9"/>
+                        <polygon points="30,8 35,25 30,48 25,25" fill="#aaddff" opacity="0.6"/>
+                        <circle cx="30" cy="30" r="25" fill="rgba(136,221,255,0.2)"/>
+                    </svg>
+                </div>
+                <div class="character-name">晶塵使</div>
+                <div class="character-desc">閃耀的水晶能量<br>在黑暗中散發微光</div>
+            </div>
+
+            <div class="character-card" data-char="shadow">
+                <div class="character-preview">
+                    <svg width="60" height="60" viewBox="0 0 60 60">
+                        <defs>
+                            <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#9966ff"/>
+                                <stop offset="100%" stop-color="#4422aa"/>
+                            </radialGradient>
+                        </defs>
+                        <ellipse cx="30" cy="35" rx="18" ry="15" fill="url(#shadowGrad)"/>
+                        <ellipse cx="30" cy="38" rx="14" ry="10" fill="#5522bb"/>
+                        <ellipse cx="24" cy="32" rx="3" ry="4" fill="#ffffff"/>
+                        <ellipse cx="36" cy="32" rx="3" ry="4" fill="#ffffff"/>
+                        <circle cx="24" cy="33" r="1.5" fill="#220066"/>
+                        <circle cx="36" cy="33" r="1.5" fill="#220066"/>
+                        <circle cx="30" cy="35" r="22" fill="rgba(153,102,255,0.15)"/>
+                    </svg>
+                </div>
+                <div class="character-name">暗影行者</div>
+                <div class="character-desc">與黑暗融為一體<br>靠直覺感知世界</div>
+            </div>
+        </div>
+        <button id="confirmBtn">確認選擇</button>
+    </div>
+
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div id="statusText">請先選擇角色</div>
+            <div id="instructions">
+                <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> 或
+                <span class="key">↑</span><span class="key">←</span><span class="key">↓</span><span class="key">→</span> 移動
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CELL_SIZE = 40;
+        const MAZE_WIDTH = 21;  
+        const MAZE_HEIGHT = 15; 
+        const MONSTER_MOVE_INTERVAL = 5000; // 🛠️ 已修改：改為 5000 毫秒（5 秒）移動一次
+
+        const COLORS = {
+            wall: '#0d0815',
+            wallTop: '#1a0f2e',
+            floor: '#0a0a10',
+            floorVisited: '#12101a',
+            player: '#ffaa44',
+            playerGlow: 'rgba(255, 170, 68, 0.3)',
+            monster: '#ff2244',
+            monsterGlow: 'rgba(255, 34, 68, 0.4)',
+            exit: '#44ff88',
+            exitGlow: 'rgba(68, 255, 136, 0.4)',
+            fog: 'rgba(5, 5, 8, 0.95)',
+            text: '#c9b8d9',
+            textGlow: '#8866aa'
+        };
+
+        const CHARACTERS = {
+            candle: {
+                name: '執燭者',
+                color: '#ffaa44',
+                glowColor: 'rgba(255, 170, 68, 0.4)',
+                innerColor: '#ffdd88',
+                lightRadius: 5
+            },
+            crystal: {
+                name: '晶塵使',
+                color: '#88ddff',
+                glowColor: 'rgba(136, 221, 255, 0.4)',
+                innerColor: '#aaddff',
+                lightRadius: 6
+            },
+            shadow: {
+                name: '暗影行者',
+                color: '#9966ff',
+                glowColor: 'rgba(153, 102, 255, 0.4)',
+                innerColor: '#bb99ff',
+                lightRadius: 4
+            }
+        };
+
+        let selectedCharacter = 'candle';
+        let currentGame = null; 
+
+        const characterModal = document.getElementById('characterModal');
+        const characterCards = document.querySelectorAll('.character-card');
+        const confirmBtn = document.getElementById('confirmBtn');
+
+        characterCards.forEach(card => {
+            card.addEventListener('click', () => {
+                characterCards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedCharacter = card.dataset.char;
+                confirmBtn.disabled = false;
+            });
+        });
+
+        confirmBtn.addEventListener('click', () => {
+            characterModal.style.display = 'none';
+            const canvas = document.getElementById('gameCanvas');
+            currentGame = new Game(canvas);
+            currentGame.start();
+        });
+
+        class MazeGenerator {
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.maze = [];
+                this.playerStart = { x: 1, y: 1 };
+                this.exit = { x: width - 2, y: height - 2 };
+            }
+
+            generate() {
+                this.maze = Array(this.height).fill(null).map(() =>
+                    Array(this.width).fill(1)
+                );
+                this.carve(1, 1);
+                this.maze[this.exit.y][this.exit.x] = 0;
+                return this.maze;
+            }
+
+            carve(x, y) {
+                this.maze[y][x] = 0;
+                const directions = this.shuffle([
+                    [0, -2], [0, 2], [-2, 0], [2, 0]
+                ]);
+
+                for (const [dx, dy] of directions) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (this.isInBounds(nx, ny) && this.maze[ny][nx] === 1) {
+                        this.maze[y + dy/2][x + dx/2] = 0;
+                        this.carve(nx, ny);
+                    }
+                }
+            }
+
+            isInBounds(x, y) {
+                return x > 0 && x < this.width - 1 && y > 0 && y < this.height - 1;
+            }
+
+            shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+        }
+
+        class Player {
+            constructor(x, y, characterType) {
+                this.x = x;
+                this.y = y;
+                this.trail = []; 
+                this.character = CHARACTERS[characterType] || CHARACTERS.candle;
+            }
+
+            move(dx, dy, maze) {
+                const newX = this.x + dx;
+                const newY = this.y + dy;
+                if (maze[newY] && maze[newY][newX] === 0) {
+                    this.trail.push({ x: this.x, y: this.y, time: Date.now() });
+                    if (this.trail.length > 50) this.trail.shift();
+                    this.x = newX;
+                    this.y = newY;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        class Monster {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.lastMoveTime = Date.now();
+                this.moveCount = 0; 
+            }
+
+            setSpawnNearExit(exitX, exitY, maze) {
+                const dirs = [
+                    [-1, 0], [1, 0], [0, -1], [0, 1],
+                    [-1, -1], [1, -1], [-1, 1], [1, 1]
+                ];
+                for (const [dx, dy] of dirs) {
+                    const nx = exitX + dx;
+                    const ny = exitY + dy;
+                    if (maze[ny] && maze[ny][nx] === 0) {
+                        this.x = nx;
+                        this.y = ny;
+                        return true;
+                    }
+                }
+                this.x = exitX;
+                this.y = exitY;
+            }
+
+            chase(player, maze, currentTime) {
+                if (currentTime - this.lastMoveTime < MONSTER_MOVE_INTERVAL) {
+                    return false; 
+                }
+                this.lastMoveTime = currentTime;
+                this.moveCount++;
+
+                const dirs = [
+                    {x: 1, y: 0}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 0, y: -1}
+                ];
+                let bestMove = null;
+                let minDistance = Infinity;
+
+                for (const dir of dirs) {
+                    const nx = this.x + dir.x;
+                    const ny = this.y + dir.y;
+
+                    if (maze[ny] && maze[ny][nx] === 0) {
+                        const dist = Math.abs(player.x - nx) + Math.abs(player.y - ny);
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            bestMove = {x: nx, y: ny};
+                        }
+                    }
+                }
+
+                if (bestMove) {
+                    this.x = bestMove.x;
+                    this.y = bestMove.y;
+                    return true;
+                }
+                return false; 
+            }
+
+            canCatchPlayer(player) {
+                return this.x === player.x && this.y === player.y;
+            }
+        }
+
+        class Game {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.canvas.width = MAZE_WIDTH * CELL_SIZE;
+                this.canvas.height = MAZE_HEIGHT * CELL_SIZE;
+
+                this.state = 'waiting'; 
+                this.maze = null;
+                this.player = null;
+                this.monster = null;
+                this.exit = null;
+                this.startTime = 0;
+                this.elapsedTime = 0;
+                this.shakeIntensity = 0;
+                this.monsterWarning = false; 
+
+                this.render();
+            }
+
+            start() {
+                const generator = new MazeGenerator(MAZE_WIDTH, MAZE_HEIGHT);
+                this.maze = generator.generate();
+
+                this.player = new Player(
+                    generator.playerStart.x,
+                    generator.playerStart.y,
+                    selectedCharacter
+                );
+
+                this.exit = generator.exit;
+                this.monster = new Monster(0, 0);
+                this.monster.setSpawnNearExit(this.exit.x, this.exit.y, this.maze);
+
+                this.state = 'playing';
+                this.startTime = Date.now();
+                this.monster.lastMoveTime = Date.now();
+                this.shakeIntensity = 0;
+                this.monsterWarning = false;
+                document.getElementById('statusText').innerText = '尋找綠色的出口... 怪物正從遠處逼近...';
+
+                this.gameLoop();
+            }
+
+            handleInput(key) {
+                if (this.state !== 'playing') return;
+
+                let dx = 0, dy = 0;
+                switch(key) {
+                    case 'ArrowUp': case 'w': case 'W': dy = -1; break;
+                    case 'ArrowDown': case 's': case 'S': dy = 1; break;
+                    case 'ArrowLeft': case 'a': case 'A': dx = -1; break;
+                    case 'ArrowRight': case 'd': case 'D': dx = 1; break;
+                    default: return;
+                }
+
+                const moved = this.player.move(dx, dy, this.maze);
+                if (moved) {
+                    this.shakeIntensity = 3;
+                }
+            }
+
+            gameLoop() {
+                if (this.state !== 'playing') return;
+
+                const now = Date.now();
+                this.update(now);
+                this.render();
+
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            update(currentTime) {
+                const monsterMoved = this.monster.chase(this.player, this.maze, currentTime);
+
+                if (monsterMoved) {
+                    this.monsterWarning = true;
+                    this.shakeIntensity = 8; 
+                    setTimeout(() => { this.monsterWarning = false; }, 1000); // 🛠️ 配合5秒節奏，紅光閃爍時間縮短為1秒
+                }
+
+                if (this.monster.canCatchPlayer(this.player)) {
+                    this.state = 'gameover';
+                    this.showGameOver();
+                    return;
+                }
+
+                if (this.player.x === this.exit.x && this.player.y === this.exit.y) {
+                    this.state = 'win';
+                    this.elapsedTime = Date.now() - this.startTime;
+                    this.showWin();
+                    return;
+                }
+
+                this.shakeIntensity *= 0.9;
+                if (this.shakeIntensity < 0.1) this.shakeIntensity = 0;
+
+                this.elapsedTime = Date.now() - this.startTime;
+
+                const timeSinceMove = currentTime - this.monster.lastMoveTime;
+                const timeUntilMove = Math.max(0, MONSTER_MOVE_INTERVAL - timeSinceMove);
+                const secondsLeft = Math.ceil(timeUntilMove / 1000);
+
+                // 🛠️ 優化提示文字：因為總共只有5秒，所以剩2秒時就顯示緊張警告
+                if (secondsLeft <= 2) {
+                    document.getElementById('statusText').innerText = `⚠️ 警告！怪物即將在 ${secondsLeft} 秒後暴走！`;
+                } else if (this.monsterWarning) {
+                    document.getElementById('statusText').innerText = `敲擊聲響起！怪物逼近了！`;
+                } else {
+                    document.getElementById('statusText').innerText = `怪物將在 ${secondsLeft} 秒後移動...`;
+                }
+            }
+
+            render() {
+                const ctx = this.ctx;
+                ctx.save();
+                if (this.shakeIntensity > 0) {
+                    const shakeX = (Math.random() - 0.5) * this.shakeIntensity;
+                    const shakeY = (Math.random() - 0.5) * this.shakeIntensity;
+                    ctx.translate(shakeX, shakeY);
+                }
+
+                ctx.fillStyle = '#050508';
+                ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (this.state === 'waiting') {
+                    this.renderStartScreen();
+                } else {
+                    this.renderGame();
+                }
+                ctx.restore();
+            }
+
+            renderStartScreen() {
+                const ctx = this.ctx;
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+
+                ctx.fillStyle = COLORS.textGlow;
+                ctx.font = 'bold 48px Cinzel, serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('逃出深淵', centerX, centerY - 60);
+            }
+
+            renderGame() {
+                this.renderMaze();
+                this.renderExit();
+                this.renderPlayer();
+                this.renderMonster();
+                this.renderFog();
+                this.renderTime();
+
+                if (this.monsterWarning) {
+                    this.renderWarning();
+                }
+            }
+
+            renderMaze() {
+                const ctx = this.ctx;
+                for (let y = 0; y < MAZE_HEIGHT; y++) {
+                    for (let x = 0; x < MAZE_WIDTH; x++) {
+                        const cellX = x * CELL_SIZE;
+                        const cellY = y * CELL_SIZE;
+
+                        if (this.maze[y][x] === 1) {
+                            ctx.fillStyle = COLORS.wall;
+                            ctx.fillRect(cellX, cellY, CELL_SIZE, CELL_SIZE);
+                            ctx.fillStyle = COLORS.wallTop;
+                            ctx.fillRect(cellX, cellY, CELL_SIZE, 3);
+                        } else {
+                            ctx.fillStyle = COLORS.floor;
+                            ctx.fillRect(cellX, cellY, CELL_SIZE, CELL_SIZE);
+                        }
+                    }
+                }
+            }
+
+            renderPlayer() {
+                const ctx = this.ctx;
+                const char = this.player.character;
+                const centerX = this.player.x * CELL_SIZE + CELL_SIZE / 2;
+                const centerY = this.player.y * CELL_SIZE + CELL_SIZE / 2;
+
+                const lightRadius = CELL_SIZE * (selectedCharacter === 'crystal' ? 1.8 : 1.5);
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, lightRadius);
+                gradient.addColorStop(0, char.glowColor);
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(centerX - CELL_SIZE * 3, centerY - CELL_SIZE * 3, CELL_SIZE * 6, CELL_SIZE * 6);
+
+                ctx.save();
+                ctx.shadowColor = char.color;
+                ctx.shadowBlur = 15;
+
+                if (selectedCharacter === 'candle') {
+                    ctx.fillStyle = '#f5f5dc';
+                    ctx.fillRect(centerX - 4, centerY, 8, 14);
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY - 4, 6, 10, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = char.color;
+                    ctx.fill();
+                } else if (selectedCharacter === 'crystal') {
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY - 12);
+                    ctx.lineTo(centerX + 10, centerY);
+                    ctx.lineTo(centerX + 6, centerY + 10);
+                    ctx.lineTo(centerX - 6, centerY + 10);
+                    ctx.lineTo(centerX - 10, centerY);
+                    ctx.closePath();
+                    ctx.fillStyle = char.color;
+                    ctx.fill();
+                } else if (selectedCharacter === 'shadow') {
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY + 2, 12, 10, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = char.color;
+                    ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(centerX - 4, centerY, 2, 0, Math.PI * 2);
+                    ctx.arc(centerX + 4, centerY, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            renderMonster() {
+                const ctx = this.ctx;
+                const centerX = this.monster.x * CELL_SIZE + CELL_SIZE / 2;
+                const centerY = this.monster.y * CELL_SIZE + CELL_SIZE / 2;
+
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, CELL_SIZE * 2);
+                gradient.addColorStop(0, 'rgba(255, 34, 68, 0.4)');
+                gradient.addColorStop(1, 'rgba(255, 0, 50, 0)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(centerX - CELL_SIZE * 2, centerY - CELL_SIZE * 2, CELL_SIZE * 4, CELL_SIZE * 4);
+
+                ctx.save();
+                ctx.fillStyle = '#1a3c80';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(centerX - 4, centerY - 2, 3, 0, Math.PI * 2);
+                ctx.arc(centerX + 4, centerY - 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            renderExit() {
+                const ctx = this.ctx;
+                const centerX = this.exit.x * CELL_SIZE + CELL_SIZE / 2;
+                const centerY = this.exit.y * CELL_SIZE + CELL_SIZE / 2;
+
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 12, 0, Math.PI * 2);
+                ctx.fillStyle = COLORS.exit;
+                ctx.fill();
+            }
+
+            renderFog() {
+                const ctx = this.ctx;
+                const playerLightRadius = this.player.character.lightRadius;
+
+                for (let y = 0; y < MAZE_HEIGHT; y++) {
+                    for (let x = 0; x < MAZE_WIDTH; x++) {
+                        const dx = Math.abs(x - this.player.x);
+                        const dy = Math.abs(y - this.player.y);
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance > playerLightRadius) {
+                            ctx.fillStyle = COLORS.fog;
+                            ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                        }
+                    }
+                }
+            }
+
+            renderWarning() {
+                const ctx = this.ctx;
+                ctx.fillStyle = 'rgba(255, 0, 50, 0.2)';
+                ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+
+            renderTime() {
+                const ctx = this.ctx;
+                const seconds = Math.floor(this.elapsedTime / 1000);
+                const displaySeconds = seconds % 60;
+                const minutes = Math.floor(seconds / 60);
+                
+                ctx.fillStyle = 'rgba(139, 122, 160, 0.8)';
+                ctx.font = '14px "Noto Sans TC", sans-serif';
+                ctx.fillText(`時間: ${minutes}:${displaySeconds.toString().padStart(2, '0')}`, 15, 25);
+                ctx.fillText(`怪物步數: ${this.monster.moveCount}`, 15, 45);
+            }
+
+            showGameOver() {
+                document.getElementById('statusText').innerHTML = `<span style="color:#ff4466">你被抓住了...</span> 按任意鍵重新選擇角色`;
+            }
+
+            showWin() {
+                const seconds = Math.floor(this.elapsedTime / 1000);
+                document.getElementById('statusText').innerHTML = `<span style="color:#44ff88">逃脫成功！</span> 用時 ${seconds} 秒。按任意鍵再玩一次`;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!currentGame) return;
+
+            if (currentGame.state === 'gameover' || currentGame.state === 'win') {
+                characterModal.style.display = 'flex';
+                currentGame.state = 'waiting';
+                document.getElementById('statusText').innerText = '請先選擇角色';
+                return;
+            }
+
+            if (currentGame.state === 'playing') {
+                currentGame.handleInput(e.key);
+            }
+        });
+    </script>
+</body>
+</html>

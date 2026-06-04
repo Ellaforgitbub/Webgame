@@ -1,329 +1,759 @@
-  <!DOCTYPE html>
-  <html lang="zh-TW">
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>🎮 遊戲大廳</title>
-      <style>
-          * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-          }
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 遊戲大廳</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-          body {
-              min-height: 100vh;
-              background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460
-  100%);
-              font-family: 'Segoe UI', Arial, sans-serif;
-              overflow-x: hidden;
-          }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow-x: hidden;
+        }
 
-          /* ===== 主選單 ===== */
-          #menu {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              min-height: 100vh;
-              padding: 40px 20px;
-          }
+        /* ===== Header（使用者資訊） ===== */
+        #header {
+            position: fixed;
+            top: 0;
+            right: 0;
+            padding: 20px;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-          .logo {
-              font-size: 3.5rem;
-              color: #fff;
-              margin-bottom: 10px;
-              text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
-              animation: float 3s ease-in-out infinite;
-          }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-          @keyframes float {
-              0%, 100% { transform: translateY(0); }
-              50% { transform: translateY(-10px); }
-          }
+        .user-name {
+            color: #fff;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
 
-          .subtitle {
-              color: rgba(255, 255, 255, 0.6);
-              font-size: 1.1rem;
-              margin-bottom: 50px;
-              letter-spacing: 3px;
-          }
+        .btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
 
-          .game-cards {
-              display: flex;
-              gap: 30px;
-              flex-wrap: wrap;
-              justify-content: center;
-          }
+        .btn-login {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #fff;
+            display: inline-block;
+        }
 
-          .card {
-              width: 280px;
-              background: rgba(255, 255, 255, 0.08);
-              backdrop-filter: blur(10px);
-              border-radius: 20px;
-              padding: 30px;
-              cursor: pointer;
-              transition: all 0.3s ease;
-              border: 1px solid rgba(255, 255, 255, 0.1);
-              position: relative;
-              overflow: hidden;
-          }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(74, 222, 128, 0.4);
+        }
 
-          .card::before {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              height: 4px;
-              background: linear-gradient(90deg, var(--accent1), var(--accent2));
-              opacity: 0;
-              transition: opacity 0.3s;
-          }
+        .btn-logout {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
 
-          .card:hover::before {
-              opacity: 1;
-          }
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.2);
+        }
 
-          .card:hover {
-              transform: translateY(-10px);
-              background: rgba(255, 255, 255, 0.12);
-              box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-          }
+        /* ===== 主選單 ===== */
+        #menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
 
-          .card-icon {
-              width: 80px;
-              height: 80px;
-              margin: 0 auto 20px;
-              border-radius: 16px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 2.5rem;
-          }
+        .logo {
+            font-size: 3.5rem;
+            color: #fff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
 
-          .card[data-game="2048"] { --accent1: #edc22e; --accent2: #f59563; }
-          .card[data-game="2048"] .card-icon { background: linear-gradient(135deg,
-  #edc22e, #f59563); }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
 
-          .card[data-game="snake"] { --accent1: #4ade80; --accent2: #22c55e; }
-          .card[data-game="snake"] .card-icon { background: linear-gradient(135deg,
-  #4ade80, #22c55e); }
+        .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.1rem;
+            margin-bottom: 50px;
+            letter-spacing: 3px;
+        }
 
-          .card[data-game="maze"] { --accent1: #8b7aa0; --accent2: #8866aa; }
-          .card[data-game="maze"] .card-icon { background: linear-gradient(135deg,
-  #8b7aa0, #8866aa); }
+        .game-cards {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
 
-          .card[data-game="minesweeper"] { --accent1: #ef4444; --accent2: #dc2626; }
-          .card[data-game="minesweeper"] .card-icon { background:
-  linear-gradient(135deg, #ef4444, #dc2626); }
+        .card {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
 
-          .card-title {
-              color: #fff;
-              font-size: 1.5rem;
-              font-weight: bold;
-              margin-bottom: 10px;
-              text-align: center;
-          }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
 
-          .card-desc {
-              color: rgba(255, 255, 255, 0.6);
-              font-size: 0.9rem;
-              text-align: center;
-              line-height: 1.6;
-          }
+        .card:hover::before {
+            opacity: 1;
+        }
 
-          .card-hint {
-              color: rgba(255, 255, 255, 0.4);
-              font-size: 0.75rem;
-              text-align: center;
-              margin-top: 20px;
-              opacity: 0;
-              transition: opacity 0.3s;
-          }
+        .card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
 
-          .card:hover .card-hint {
-              opacity: 1;
-          }
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+        }
 
-          /* ===== 遊戲區域 ===== */
-          #gameArea {
-              display: none;
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background: #000;
-          }
+        .card[data-game="2048"] { --accent1: #edc22e; --accent2: #f59563; }
+        .card[data-game="2048"] .card-icon { background: linear-gradient(135deg, #edc22e, #f59563); }
 
-          #gameFrame {
-              width: 100%;
-              height: 100%;
-              border: none;
-          }
+        .card[data-game="snake"] { --accent1: #4ade80; --accent2: #22c55e; }
+        .card[data-game="snake"] .card-icon { background: linear-gradient(135deg, #4ade80, #22c55e); }
 
-          #backBtn {
-              position: fixed;
-              top: 20px;
-              left: 20px;
-              z-index: 100;
-              background: rgba(139, 122, 160, 0.9);
-              border: 2px solid rgba(200, 180, 220, 0.6);
-              color: #fff;
-              padding: 12px 24px;
-              border-radius: 30px;
-              cursor: pointer;
-              font-size: 1rem;
-              backdrop-filter: blur(10px);
-              transition: all 0.3s;
-              display: none;
-              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-          }
+        .card[data-game="maze"] { --accent1: #8b7aa0; --accent2: #8866aa; }
+        .card[data-game="maze"] .card-icon { background: linear-gradient(135deg, #8b7aa0, #8866aa); }
 
-          #backBtn:hover {
-              background: rgba(160, 140, 180, 0.95);
-              transform: scale(1.05);
-              box-shadow: 0 6px 20px rgba(139, 122, 160, 0.4);
-          }
+        .card[data-game="minesweeper"] { --accent1: #ef4444; --accent2: #dc2626; }
+        .card[data-game="minesweeper"] .card-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
-          #backBtn::before {
-              content: '← ';
-          }
+        .card-title {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
 
-          /* 載入動畫 */
-          .loading {
-              display: none;
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              color: #fff;
-              font-size: 1.5rem;
-          }
+        .card-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            text-align: center;
+            line-height: 1.6;
+        }
 
-          @keyframes spin {
-              to { transform: rotate(360deg); }
-          }
-      </style>
-  </head>
-  <body>
-      <!-- 主選單 -->
-      <div id="menu">
-          <div class="logo">🎮 遊戲大廳</div>
-          <div class="subtitle">GAME LOBBY</div>
+        .card-hint {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
 
-          <div class="game-cards">
-              <div class="card" data-game="2048">
-                  <div class="card-icon">🔢</div>
-                  <div class="card-title">2048</div>
-                  <div class="card-desc">
-                      經典滑塊益智遊戲<br>
-                      合併數字，挑戰 2048！
-                  </div>
-                  <div class="card-hint">點擊進入遊戲</div>
-              </div>
+        .card:hover .card-hint {
+            opacity: 1;
+        }
 
-              <div class="card" data-game="snake">
-                  <div class="card-icon">🐍</div>
-                  <div class="card-title">貪吃蛇</div>
-                  <div class="card-desc">
-                      操控蛇吃遍美食<br>
-                      考驗你的反應速度！
-                  </div>
-                  <div class="card-hint">點擊進入遊戲</div>
-              </div>
+        /* ===== 遊戲區域 ===== */
+        #gameArea {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
 
-              <div class="card" data-game="maze">
-                  <div class="card-icon">👹</div>
-                  <div class="card-title">逃出深淵</div>
-                  <div class="card-desc">
-                      在黑暗中甦醒<br>
-                      逃離怪物的追擊！
-                  </div>
-                  <div class="card-hint">點擊進入遊戲</div>
-              </div>
+        #gameFrame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
 
-              <div class="card" data-game="minesweeper">
-                  <div class="card-icon">💣</div>
-                  <div class="card-title">踩地雷</div>
-                  <div class="card-desc">
-                      經典掃雷益智遊戲<br>
-                      小心！每一步都可能是最後一步！
-                  </div>
-                  <div class="card-hint">點擊進入遊戲</div>
-              </div>
-          </div>
-      </div>
+        #backBtn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(139, 122, 160, 0.9);
+            border: 2px solid rgba(200, 180, 220, 0.6);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
 
-      <!-- 遊戲區域 -->
-      <div id="gameArea">
-          <iframe id="gameFrame"></iframe>
-      </div>
+        #backBtn:hover {
+            background: rgba(160, 140, 180, 0.95);
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(139, 122, 160, 0.4);
+        }
 
-      <button id="backBtn">返回大廳</button>
-      <div class="loading" id="loading">載入中...</div>
+        #backBtn::before {
+            content: '← ';
+        }
 
-      <script>
-          const menu = document.getElementById('menu');
-          const gameArea = document.getElementById('gameArea');
-          const gameFrame = document.getElementById('gameFrame');
-          const backBtn = document.getElementById('backBtn');
-          const loading = document.getElementById('loading');
-          const cards = document.querySelectorAll('.card');
+        /* 載入動畫 */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 1.5rem;
+        }
 
-          const gameFiles = {
-              '2048': '2048.html',
-              'snake': 'snake.html',
-              'maze': 'maze.html',
-              'minesweeper': 'minesweeper.html'
-          };
+        /* ===== 排行榜面板 ===== */
+        #leaderboard {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            overflow: hidden;
+        }
 
-          function openGame(gameName) {
-              // 顯示載入中
-              loading.style.display = 'block';
+        #leaderboardHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(139, 122, 160, 0.3);
+            cursor: pointer;
+            user-select: none;
+        }
 
-              // 隱藏選單，顯示遊戲區域
-              menu.style.display = 'none';
-              gameArea.style.display = 'block';
-              backBtn.style.display = 'block';
+        #leaderboardHeader h3 {
+            color: #fff;
+            font-size: 1rem;
+        }
 
-              // 載入遊戲
-              gameFrame.src = gameFiles[gameName];
+        #toggleIcon {
+            color: #fff;
+            transition: transform 0.3s;
+        }
 
-              // iframe 載入完成後隱藏載入動畫
-              gameFrame.onload = function() {
-                  loading.style.display = 'none';
-              };
-          }
+        #leaderboard.collapsed #toggleIcon {
+            transform: rotate(180deg);
+        }
 
-          function closeGame() {
-              // 顯示選單，隱藏遊戲區域
-              menu.style.display = 'flex';
-              gameArea.style.display = 'none';
-              backBtn.style.display = 'none';
+        #leaderboardContent {
+            max-height: 400px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
 
-              // 清除 iframe
-              gameFrame.src = '';
-          }
+        #leaderboard.collapsed #leaderboardContent {
+            max-height: 0;
+        }
 
-          // 卡片點擊事件
-          cards.forEach(card => {
-              card.addEventListener('click', () => {
-                  const gameName = card.dataset.game;
-                  openGame(gameName);
-              });
-          });
+        .leaderboard-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+        }
 
-          // 返回按鈕
-          backBtn.addEventListener('click', closeGame);
+        .lb-tab {
+            flex: 1;
+            padding: 10px 5px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
 
-          // ESC 鍵返回
-          document.addEventListener('keydown', e => {
-              if (e.key === 'Escape' && gameArea.style.display === 'block') {
-                  closeGame();
-              }
-          });
-      </script>
-  </body>
-  </html>
+        .lb-tab.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .lb-tab:hover:not(.active) {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .leaderboard-list {
+            padding: 10px 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .lb-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .lb-rank {
+            width: 30px;
+            font-weight: bold;
+            color: #f5a623;
+        }
+
+        .lb-rank.gold { color: #ffd700; }
+        .lb-rank.silver { color: #c0c0c0; }
+        .lb-rank.bronze { color: #cd7f32; }
+
+        .lb-name {
+            flex: 1;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .lb-score {
+            color: #4ade80;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .lb-empty {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            padding: 30px 0;
+            font-size: 0.9rem;
+        }
+
+        /* ===== 未登入警告 Modal ===== */
+        #loginWarning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #loginWarning.show {
+            display: flex;
+        }
+
+        .warning-box {
+            background: rgba(30, 30, 50, 0.95);
+            border-radius: 20px;
+            padding: 30px 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .warning-box h2 {
+            color: #f5a623;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .warning-box p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .warning-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .warning-buttons .btn {
+            padding: 10px 25px;
+        }
+
+        .btn-go-login {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #fff;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="header"></div>
+
+    <div id="menu">
+        <div class="logo">🎮 遊戲大廳</div>
+        <div class="subtitle">GAME LOBBY</div>
+
+        <div class="game-cards">
+            <div class="card" data-game="2048">
+                <div class="card-icon">🔢</div>
+                <div class="card-title">2048</div>
+                <div class="card-desc">
+                    經典滑塊益智遊戲<br>
+                    合併數字，挑戰 2048！
+                </div>
+                <div class="card-hint">點擊進入遊戲</div>
+            </div>
+
+            <div class="card" data-game="snake">
+                <div class="card-icon">🐍</div>
+                <div class="card-title">貪吃蛇</div>
+                <div class="card-desc">
+                    操控蛇吃遍美食<br>
+                    考驗你的反應速度！
+                </div>
+                <div class="card-hint">點擊進入遊戲</div>
+            </div>
+
+            <div class="card" data-game="maze">
+                <div class="card-icon">👹</div>
+                <div class="card-title">逃出深淵</div>
+                <div class="card-desc">
+                    在黑暗中甦醒<br>
+                    逃離怪物的追擊！
+                </div>
+                <div class="card-hint">點擊進入遊戲</div>
+            </div>
+
+            <div class="card" data-game="minesweeper">
+                <div class="card-icon">💣</div>
+                <div class="card-title">踩地雷</div>
+                <div class="card-desc">
+                    經典掃雷益智遊戲<br>
+                    小心！每一步都可能是最後一步！
+                </div>
+                <div class="card-hint">點擊進入遊戲</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameArea">
+        <iframe id="gameFrame"></iframe>
+    </div>
+
+    <button id="backBtn">返回大廳</button>
+    <div class="loading" id="loading">載入中...</div>
+
+    <div id="leaderboard">
+        <div id="leaderboardHeader">
+            <h3>🏆 排行榜</h3>
+            <span id="toggleIcon">▼</span>
+        </div>
+        <div id="leaderboardContent">
+            <div class="leaderboard-tabs">
+                <div class="lb-tab active" data-game="2048">2048</div>
+                <div class="lb-tab" data-game="snake">蛇</div>
+                <div class="lb-tab" data-game="maze">迷宮</div>
+                <div class="lb-tab" data-game="minesweeper">地雷</div>
+            </div>
+            <div class="leaderboard-list" id="leaderboardList"></div>
+        </div>
+    </div>
+
+    <div id="loginWarning">
+        <div class="warning-box">
+            <h2>⚠️ 提醒</h2>
+            <p>不登入將無法記錄遊戲紀錄<br>是否要先登入？</p>
+            <div class="warning-buttons">
+                <button class="btn btn-go-login" onclick="goToLogin()">前往登入</button>
+                <button class="btn btn-cancel" onclick="closeWarning()">先玩玩看</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 常數 =====
+        const STORAGE_KEYS = {
+            players: 'gamePlayers',
+            currentUser: 'currentUser'
+        };
+
+        const gameFiles = {
+            '2048': '2048.html',
+            'snake': 'snake.html',
+            'maze': 'maze.html',
+            'minesweeper': 'minesweeper.html'
+        };
+
+        // ===== DOM 元素 =====
+        const header = document.getElementById('header');
+        const menu = document.getElementById('menu');
+        const gameArea = document.getElementById('gameArea');
+        const gameFrame = document.getElementById('gameFrame');
+        const backBtn = document.getElementById('backBtn');
+        const loading = document.getElementById('loading');
+        const cards = document.querySelectorAll('.card');
+        const leaderboard = document.getElementById('leaderboard');
+        const leaderboardHeader = document.getElementById('leaderboardHeader');
+        const leaderboardList = document.getElementById('leaderboardList');
+        const lbTabs = document.querySelectorAll('.lb-tab');
+        const loginWarning = document.getElementById('loginWarning');
+
+        let currentGame = null; 
+
+        // ===== 初始化 =====
+        function init() {
+            // 【修正】移除未登入就強制轉跳 login.html 的死結，允許未登入狀態瀏覽大廳與使用彈出視窗
+            renderHeader();
+            renderLeaderboard('2048');
+            bindEvents();
+        }
+
+        // ===== 取得目前登入使用者 =====
+        if (!window.getCurrentUser) {
+            window.getCurrentUser = function() {
+                const data = localStorage.getItem(STORAGE_KEYS.currentUser);
+                return data ? JSON.parse(data) : null;
+            };
+        }
+
+        // ===== 渲染 Header =====
+        function renderHeader() {
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                header.innerHTML = `
+                    <div class="user-info">
+                        <span class="user-name">👤 ${currentUser.username}</span>
+                        <button class="btn btn-logout" onclick="logout()">登出</button>
+                    </div>
+                `;
+            } else {
+                header.innerHTML = `
+                    <a href="login.html" class="btn btn-login">登入 / 註冊</a>
+                `;
+            }
+        }
+
+        // ===== 登出 =====
+        if (!window.logout) {
+            window.logout = function() {
+                localStorage.removeItem(STORAGE_KEYS.currentUser);
+                window.location.href = 'login.html';
+            };
+        }
+
+        // ===== 渲染排行榜 =====
+        function renderLeaderboard(game) {
+            const players = getPlayers();
+            const scores = [];
+
+            for (const [username, data] of Object.entries(players)) {
+                if (data.scores && data.scores[game] !== undefined) {
+                    scores.push({
+                        username,
+                        score: Number(data.scores[game]) // 確保是數字
+                    });
+                }
+            }
+
+            // 【修正】依據遊戲種類進行正確的排序（時間類越小越前，分數類越大越前）
+            const isTimeGame = (game === 'maze' || game === 'minesweeper');
+            if (isTimeGame) {
+                scores.sort((a, b) => a.score - b.score); // 時間少（小）排前面
+            } else {
+                scores.sort((a, b) => b.score - a.score); // 分數高（大）排前面
+            }
+
+            const top10 = scores.slice(0, 10);
+
+            if (top10.length === 0) {
+                leaderboardList.innerHTML = '<div class="lb-empty">還沒有紀錄，成為第一個吧！</div>';
+                return;
+            }
+
+            leaderboardList.innerHTML = top10.map((item, index) => {
+                const rank = index + 1;
+                const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+                
+                // 【修正】資料庫統一存正數，渲染時依照遊戲種類加上「秒」或「分」
+                const gameSuffix = isTimeGame ? ' 秒' : ' 分';
+
+                return `
+                    <div class="lb-item">
+                        <span class="lb-rank ${rankClass}">${rank}</span>
+                        <span class="lb-name">${item.username}</span>
+                        <span class="lb-score">${item.score}${gameSuffix}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== 取得所有玩家資料 =====
+        function getPlayers() {
+            const data = localStorage.getItem(STORAGE_KEYS.players);
+            return data ? JSON.parse(data) : {};
+        }
+
+        // ===== 更新分數 =====
+        function updateScore(game, username, score) {
+            const players = getPlayers();
+            if (!players[username]) return;
+            if (!players[username].scores) players[username].scores = {};
+
+            const currentScore = players[username].scores[game];
+            const isTimeGame = (game === 'maze' || game === 'minesweeper');
+            const incomingScore = Number(score);
+
+            // 【修正】修正時間類遊戲負數大小判斷錯誤的 Bug，統一用正數做更直覺的邏輯判定
+            if (currentScore === undefined || 
+                (isTimeGame ? incomingScore < Number(currentScore) : incomingScore > Number(currentScore))) {
+                players[username].scores[game] = incomingScore;
+                localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(players));
+                
+                // 如果目前排行榜切換在該遊戲，同步刷新顯示
+                const activeTab = document.querySelector('.lb-tab.active');
+                if (activeTab && activeTab.dataset.game === game) {
+                    renderLeaderboard(game);
+                }
+            }
+        }
+
+        // ===== 開啟遊戲 =====
+        function openGame(gameName) {
+            loading.style.display = 'block';
+            menu.style.display = 'none';
+            gameArea.style.display = 'block';
+            backBtn.style.display = 'block';
+            gameFrame.src = gameFiles[gameName];
+
+            gameFrame.onload = function() {
+                loading.style.display = 'none';
+            };
+        }
+
+        // ===== 關閉遊戲 =====
+        function closeGame() {
+            menu.style.display = 'flex';
+            gameArea.style.display = 'none';
+            backBtn.style.display = 'none';
+            gameFrame.src = '';
+        }
+
+        // ===== 檢查登入後開遊戲 =====
+        function checkLoginAndOpenGame(gameName) {
+            const currentUser = getCurrentUser();
+            if (!currentUser) {
+                currentGame = gameName;
+                loginWarning.classList.add('show');
+            } else {
+                openGame(gameName);
+            }
+        }
+
+        // ===== 警告 Modal 操作 =====
+        if (!window.goToLogin) {
+            window.goToLogin = function() {
+                loginWarning.classList.remove('show');
+                window.location.href = 'login.html';
+            };
+        }
+
+        if (!window.closeWarning) {
+            window.closeWarning = function() {
+                loginWarning.classList.remove('show');
+                if (currentGame) {
+                    openGame(currentGame);
+                    currentGame = null;
+                }
+            };
+        }
+
+        // ===== 事件綁定 =====
+        function bindEvents() {
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const gameName = card.dataset.game;
+                    checkLoginAndOpenGame(gameName);
+                });
+            });
+
+            backBtn.addEventListener('click', closeGame);
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && gameArea.style.display === 'block') {
+                    closeGame();
+                }
+            });
+
+            leaderboardHeader.addEventListener('click', () => {
+                leaderboard.classList.toggle('collapsed');
+            });
+
+            lbTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    lbTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    renderLeaderboard(tab.dataset.game);
+                });
+            });
+
+            // 【修正】優化監聽機制：以大廳帳號為準，避免「未登入玩遊戲」或「子頁面 username 欄位不對稱」導致錯誤
+            window.addEventListener('message', (e) => {
+                if (e.data && e.data.type === 'gameScore') {
+                    const currentUser = getCurrentUser();
+                    if (currentUser) {
+                        // 直接取大廳登入的 username 與傳回的 score（傳回的分數請改用正數傳遞，例如：30）
+                        updateScore(e.data.game, currentUser.username, Math.abs(e.data.score));
+                    }
+                }
+            });
+        }
+
+        // 啟動
+        init();
+    </script>
+</body>
+</html>

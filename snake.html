@@ -178,6 +178,15 @@
             clearInterval(gameLoop);
             finalScoreEl.textContent = score;
             gameOverEl.classList.remove('hidden');
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser) {
+                window.parent.postMessage({
+                    type: 'gameScore',
+                    game: 'snake',
+                    score: score,
+                    username: currentUser.username
+                }, '*');
+            }
         }
 
         document.addEventListener('keydown', e => {

@@ -1129,6 +1129,15 @@
                   document.getElementById('statusText').innerHTML =
                       `<span style="color:#44ff88">逃脫成功！</span> 用時 ${seconds} 秒，擊敗 ${this.monsters.length}
   隻怪物！按任意鍵再玩一次`;
+                    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                    if (currentUser) {
+                        window.parent.postMessage({
+                            type: 'gameScore',
+                            game: 'maze',
+                            score: seconds,
+                            username: currentUser.username
+                        }, '*');
+                }
               }
           }
 

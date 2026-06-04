@@ -294,7 +294,19 @@
 
                   document.getElementById('gameOver').classList.toggle('hidden', !this.over);
                   document.getElementById('winOverlay').classList.toggle('hidden', !this.won);
-                  if (this.over) document.getElementById('finalScore').textContent = this.score;
+                  if (this.over) {
+                        document.getElementById('finalScore').textContent = this.score;
+                        // 發送分數到 parent
+                        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+                        if (currentUser) {
+                            window.parent.postMessage({
+                                type: 'gameScore',
+                                game: '2048',
+                                score: this.score,
+                                username: currentUser.username
+                            }, '*');
+                        }
+                }
               }
           }
 

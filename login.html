@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入 - 遊戲大廳</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #fff;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #8b7aa0, #8866aa);
+            color: #fff;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(139, 122, 160, 0.4);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .back-link a:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🎮</div>
+        <div class="subtitle">遊戲大廳</div>
+
+        <div class="tabs">
+            <div class="tab active" data-mode="login">登入</div>
+            <div class="tab" data-mode="register">註冊</div>
+        </div>
+
+        <form id="loginForm" autocomplete="off">
+            <div class="form-group">
+                <label>暱稱</label>
+                <input type="text" id="username" placeholder="請輸入暱稱" maxlength="20" required>
+                <div class="error-msg" id="usernameError"></div>
+            </div>
+
+            <div class="form-group">
+                <label>密碼</label>
+                <input type="password" id="password" placeholder="請輸入密碼" maxlength="20" required>
+                <div class="error-msg" id="passwordError"></div>
+            </div>
+
+            <button type="submit" class="btn btn-login" id="submitBtn">登入</button>
+        </form>
+
+        <div class="back-link">
+            <a href="index.html">返回遊戲大廳</a>
+        </div>
+    </div>
+
+    <script>
+        // ===== 狀態管理 =====
+        const STORAGE_KEYS = {
+            players: 'gamePlayers',
+            currentUser: 'currentUser'
+        };
+
+        let mode = 'login'; // 'login' | 'register'
+
+        // ===== DOM 元素 =====
+        const tabs = document.querySelectorAll('.tab');
+        const form = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submitBtn');
+        const usernameError = document.getElementById('usernameError');
+        const passwordError = document.getElementById('passwordError');
+
+        // ===== 初始化 =====
+        // 如果已登入，直接跳轉大廳
+        if (localStorage.getItem(STORAGE_KEYS.currentUser)) {
+            window.location.href = 'index.html';
+        }
+
+        // ===== Tab 切換 =====
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                mode = tab.dataset.mode;
+                submitBtn.textContent = mode === 'login' ? '登入' : '註冊';
+                submitBtn.className = mode === 'login' ? 'btn btn-login' : 'btn btn-register';
+                
+                // 【修正】切換模式時同時清空欄位內容與錯誤訊息，避免資料殘留與混淆
+                usernameInput.value = '';
+                passwordInput.value = '';
+                clearErrors();
+            });
+        });
+
+        // ===== 表單提交 =====
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            // 驗證
+            if (username.length < 2) {
+                showError(usernameError, '暱稱至少需要 2 個字元');
+                return;
+            }
+
+            if (password.length < 4) {
+                showError(passwordError, '密碼至少需要 4 個字元');
+                return;
+            }
+
+            if (mode === 'register') {
+                handleRegister(username, password);
+            } else {
+                handleLogin(username, password);
+            }
+        });
+
+        // ===== 註冊邏輯 =====
+        function handleRegister(username, password) {
+            const players = getPlayers();
+
+            // 檢查暱稱是否已存在
+            if (players[username]) {
+                showError(usernameError, '此暱稱已經被使用了');
+                return;
+            }
+
+            // 創建新玩家
+            players[username] = {
+                password: hashPassword(password),
+                scores: {}
+            };
+
+            savePlayers(players);
+            autoLogin(username);
+        }
+
+        // ===== 登入邏輯 =====
+        function handleLogin(username, password) {
+            const players = getPlayers();
+            const player = players[username];
+
+            if (!player) {
+                showError(usernameError, '暱稱不存在，請先註冊');
+                return;
+            }
+
+            if (player.password !== hashPassword(password)) {
+                showError(passwordError, '密碼錯誤');
+                return;
+            }
+
+            autoLogin(username);
+        }
+
+        // ===== 自動登入並跳轉 =====
+        function autoLogin(username) {
+            localStorage.setItem(STORAGE_KEYS.currentUser, JSON.stringify({ username }));
+            window.location.href = 'index.html';
+        }
+
+        // ===== 工具函數 =====
+        function getPlayers() {
+            const data = localStorage.getItem(STORAGE_KEYS.players);
+            return data ? JSON.parse(data) : {};
+        }
+
+        function savePlayers(players) {
+            localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(players));
+        }
+
+        function hashPassword(password) {
+            // 簡單的雜湊（基本防護，非加密標準）
+            let hash = 0;
+            for (let i = 0; i < password.length; i++) {
+                const char = password.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString();
+        }
+
+        function showError(element, message) {
+            element.textContent = message;
+            element.classList.add('show');
+        }
+
+        function clearErrors() {
+            usernameError.classList.remove('show');
+            passwordError.classList.remove('show');
+        }
+    </script>
+</body>
+</html>

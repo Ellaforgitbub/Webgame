@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+  <html lang="zh-TW">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>小恐龍 - Dino Run</title>
+      <style>
+          * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+          }
+          body {
+              background: #f7f7f7;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              font-family: 'Segoe UI', sans-serif;
+              overflow: hidden;
+          }
+          .game-container {
+              position: relative;
+              background: #fff;
+              border-radius: 12px;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+              overflow: hidden;
+          }
+          canvas {
+              display: block;
+          }
+          .ui-overlay {
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              padding: 15px 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              pointer-events: none;
+          }
+          .score-display {
+              font-size: 20px;
+              font-weight: bold;
+              color: #333;
+          }
+          .back-btn {
+              pointer-events: auto;
+              padding: 8px 16px;
+              background: #333;
+              color: #fff;
+              border: none;
+              border-radius: 6px;
+              font-size: 14px;
+              cursor: pointer;
+              text-decoration: none;
+          }
+          .back-btn:hover {
+              background: #555;
+          }
+          .start-screen, .game-over-screen {
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              background: rgba(255,255,255,0.95);
+              z-index: 10;
+          }
+          .start-screen h1 {
+              font-size: 48px;
+              color: #333;
+              margin-bottom: 20px;
+          }
+          .start-screen p, .game-over-screen p {
+              font-size: 18px;
+              color: #666;
+              margin-bottom: 30px;
+          }
+          .start-btn {
+              padding: 15px 40px;
+              font-size: 18px;
+              background: #4CAF50;
+              color: #fff;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              transition: background 0.2s;
+          }
+          .start-btn:hover {
+              background: #45a049;
+          }
+          .game-over-screen h2 {
+              font-size: 36px;
+              color: #e74c3c;
+              margin-bottom: 10px;
+          }
+          .final-score {
+              font-size: 28px;
+              color: #333;
+              margin-bottom: 30px;
+          }
+          .hidden {
+              display: none !important;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="game-container">
+          <canvas id="gameCanvas" width="800" height="300"></canvas>
+          <div class="ui-overlay">
+              <div class="score-display">分數：<span id="scoreText">0</span></div>
+              <a href="index.html" class="back-btn">返回大廳</a>
+          </div>
+          <div class="start-screen" id="startScreen">
+              <h1>🦖 小恐龍</h1>
+              <p>空白鍵 / 點擊 跳躍</p>
+              <button class="start-btn" id="startBtn">開始遊戲</button>
+          </div>
+          <div class="game-over-screen hidden" id="gameOverScreen">
+              <h2>遊戲結束</h2>
+              <p>最終分數：<span id="finalScore">0</span></p>
+              <button class="start-btn" id="restartBtn">再玩一次</button>
+          </div>
+      </div>
+
+      <script>
+          const canvas = document.getElementById('gameCanvas');
+          const ctx = canvas.getContext('2d');
+          const scoreText = document.getElementById('scoreText');
+          const finalScoreText = document.getElementById('finalScore');
+          const startScreen = document.getElementById('startScreen');
+          const gameOverScreen = document.getElementById('gameOverScreen');
+          const startBtn = document.getElementById('startBtn');
+          const restartBtn = document.getElementById('restartBtn');
+
+          // 遊戲狀態
+          let isRunning = false;
+          let score = 0;
+          let frameCount = 0;
+          let gameSpeed = 6;
+          let animationId = null;
+
+          // 恐龍
+          const dino = {
+              x: 80,
+              y: 200,
+              width: 44,
+              height: 48,
+              vy: 0,
+              jumpForce: -15,
+              gravity: 0.8,
+              isJumping: false
+          };
+
+          // 障礙物
+          let obstacles = [];
+          const obstacleTypes = [
+              { width: 20, height: 40 },  // 小仙人掌
+              { width: 25, height: 50 },  // 中仙人掌
+              { width: 50, height: 45 }   // 大仙人掌
+          ];
+          let minGap = 80;
+
+          // 地面
+          const groundY = 240;
+          let groundOffset = 0;
+
+          // 雲
+          let clouds = [];
+
+          // 初始化雲
+          function initClouds() {
+              clouds = [];
+              for (let i = 0; i < 3; i++) {
+                  clouds.push({
+                      x: Math.random() * canvas.width,
+                      y: 30 + Math.random() * 60,
+                      width: 60 + Math.random() * 40
+                  });
+              }
+          }
+
+          // 繪製恐龍
+          function drawDino() {
+              ctx.fillStyle = '#4CAF50';
+              // 身體
+              ctx.fillRect(dino.x, dino.y, dino.width, dino.height - 10);
+              // 頭
+              ctx.fillRect(dino.x + 20, dino.y - 15, 24, 20);
+              // 眼睛
+              ctx.fillStyle = '#fff';
+              ctx.fillRect(dino.x + 35, dino.y - 10, 6, 6);
+              ctx.fillStyle = '#333';
+              ctx.fillRect(dino.x + 37, dino.y - 9, 3, 3);
+              // 腿
+              ctx.fillStyle = '#4CAF50';
+              const legOffset = isJumping() ? 0 : Math.sin(frameCount * 0.3) * 3;
+              ctx.fillRect(dino.x + 8, dino.y + dino.height - 15 + legOffset, 8, 15);
+              ctx.fillRect(dino.x + 26, dino.y + dino.height - 15 - legOffset, 8, 15);
+              // 尾巴
+              ctx.fillRect(dino.x - 5, dino.y + 5, 10, 8);
+          }
+
+          function isJumping() {
+              return dino.y < groundY - dino.height + 10;
+          }
+
+          // 繪製障礙物
+          function drawObstacles() {
+              ctx.fillStyle = '#4CAF50';
+              obstacles.forEach(obs => {
+                  // 仙人掌主體
+                  ctx.fillRect(obs.x, groundY - obs.height, obs.width, obs.height);
+                  // 刺
+                  ctx.fillStyle = '#66BB6A';
+                  for (let i = 0; i < 3; i++) {
+                      ctx.fillRect(obs.x - 4, groundY - obs.height + 8 + i * 12, 4, 6);
+                      ctx.fillRect(obs.x + obs.width, groundY - obs.height + 8 + i * 12, 4, 6);
+                  }
+                  ctx.fillStyle = '#4CAF50';
+              });
+          }
+
+          // 繪製雲
+          function drawClouds() {
+              ctx.fillStyle = '#e0e0e0';
+              clouds.forEach(cloud => {
+                  ctx.beginPath();
+                  ctx.arc(cloud.x, cloud.y, cloud.width * 0.3, 0, Math.PI * 2);
+                  ctx.arc(cloud.x + cloud.width * 0.3, cloud.y - 10, cloud.width * 0.25, 0, Math.PI * 2);
+                  ctx.arc(cloud.x + cloud.width * 0.6, cloud.y, cloud.width * 0.3, 0, Math.PI * 2);
+                  ctx.fill();
+              });
+          }
+
+          // 繪製地面
+          function drawGround() {
+              ctx.fillStyle = '#bdbdbd';
+              ctx.fillRect(0, groundY, canvas.width, 2);
+
+              // 地面線條
+              ctx.strokeStyle = '#9e9e9e';
+              ctx.lineWidth = 1;
+              for (let i = 0; i < 20; i++) {
+                  const x = (i * 50 - groundOffset) % (canvas.width + 100) - 50;
+                  ctx.beginPath();
+                  ctx.moveTo(x, groundY + 8);
+                  ctx.lineTo(x + 30, groundY + 8);
+                  ctx.stroke();
+              }
+          }
+
+          // 跳躍
+          function jump() {
+              if (!dino.isJumping) {
+                  dino.vy = dino.jumpForce;
+                  dino.isJumping = true;
+              }
+          }
+
+          // 更新遊戲
+          function update() {
+              frameCount++;
+
+              // 更新分數
+              if (frameCount % 6 === 0) {
+                  score++;
+                  scoreText.textContent = score;
+              }
+
+              // 增加難度
+              if (frameCount % 500 === 0 && gameSpeed < 15) {
+                  gameSpeed += 0.5;
+                  minGap = Math.max(50, minGap - 5);
+              }
+
+              // 更新恐龍
+              dino.vy += dino.gravity;
+              dino.y += dino.vy;
+              if (dino.y > groundY - dino.height + 10) {
+                  dino.y = groundY - dino.height + 10;
+                  dino.vy = 0;
+                  dino.isJumping = false;
+              }
+
+              // 更新障礙物
+              if (frameCount % minGap === 0 || obstacles.length === 0) {
+                  const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
+                  obstacles.push({
+                      x: canvas.width + 50,
+                      width: type.width,
+                      height: type.height
+                  });
+              }
+              obstacles.forEach(obs => obs.x -= gameSpeed);
+              obstacles = obstacles.filter(obs => obs.x > -100);
+
+              // 更新地面
+              groundOffset = (groundOffset + gameSpeed) % 50;
+
+              // 更新雲
+              clouds.forEach(cloud => {
+                  cloud.x -= gameSpeed * 0.3;
+                  if (cloud.x < -cloud.width) {
+                      cloud.x = canvas.width + cloud.width;
+                      cloud.y = 30 + Math.random() * 60;
+                  }
+              });
+
+              // 碰撞偵測
+              obstacles.forEach(obs => {
+                  if (dino.x + dino.width - 15 > obs.x &&
+                      dino.x + 15 < obs.x + obs.width &&
+                      dino.y + dino.height - 10 > groundY - obs.height) {
+                      gameOver();
+                  }
+              });
+          }
+
+          // 繪製
+          function draw() {
+              ctx.fillStyle = '#f7f7f7';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+              drawClouds();
+              drawGround();
+              drawObstacles();
+              drawDino();
+          }
+
+          // 遊戲循環
+          function gameLoop() {
+              if (!isRunning) return;
+              update();
+              draw();
+              animationId = requestAnimationFrame(gameLoop);
+          }
+
+          // 遊戲結束
+          function gameOver() {
+              isRunning = false;
+              cancelAnimationFrame(animationId);
+
+              finalScoreText.textContent = score;
+              gameOverScreen.classList.remove('hidden');
+
+              // 回傳分數到大廳
+              const currentUser = localStorage.getItem('currentUser');
+              if (currentUser) {
+                  const user = JSON.parse(currentUser);
+                  window.parent.postMessage({
+                      type: 'gameScore',
+                      game: 'dino',
+                      score: score,
+                      username: user.username
+                  }, '*');
+              }
+          }
+
+          // 開始遊戲
+          function startGame() {
+              isRunning = true;
+              score = 0;
+              frameCount = 0;
+              gameSpeed = 6;
+              minGap = 80;
+              obstacles = [];
+              dino.y = groundY - dino.height + 10;
+              dino.vy = 0;
+              dino.isJumping = false;
+              scoreText.textContent = '0';
+              startScreen.classList.add('hidden');
+              gameOverScreen.classList.add('hidden');
+              initClouds();
+              gameLoop();
+          }
+
+          // 事件監聽
+          document.addEventListener('keydown', (e) => {
+              if (e.code === 'Space' && isRunning) {
+                  e.preventDefault();
+                  jump();
+              }
+          });
+
+          canvas.addEventListener('click', () => {
+              if (isRunning) jump();
+          });
+
+          canvas.addEventListener('touchstart', (e) => {
+              if (isRunning) {
+                  e.preventDefault();
+                  jump();
+              }
+          });
+
+          startBtn.addEventListener('click', startGame);
+          restartBtn.addEventListener('click', startGame);
+
+          // 初始化
+          initClouds();
+          draw();
+      </script>
+  </body>
+  </html>

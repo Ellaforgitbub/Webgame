@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
   <html lang="zh-TW">
   <head>
       <meta charset="UTF-8">
@@ -59,6 +59,22 @@
           .back-btn:hover {
               background: #555;
           }
+          .upload-btn {
+              pointer-events: auto;
+              padding: 8px 16px;
+              background: #4CAF50;
+              color: #fff;
+              border: none;
+              border-radius: 6px;
+              font-size: 14px;
+              cursor: pointer;
+          }
+          .upload-btn:hover {
+              background: #45a049;
+          }
+          #imageInput {
+              display: none;
+          }
           .start-screen, .game-over-screen {
               position: absolute;
               top: 0;
@@ -105,6 +121,11 @@
               color: #333;
               margin-bottom: 30px;
           }
+          .speed-display {
+              font-size: 14px;
+              color: #666;
+              margin-top: 5px;
+          }
           .hidden {
               display: none !important;
           }
@@ -114,12 +135,22 @@
       <div class="game-container">
           <canvas id="gameCanvas" width="800" height="300"></canvas>
           <div class="ui-overlay">
-              <div class="score-display">分數：<span id="scoreText">0</span></div>
-              <a href="index.html" class="back-btn">返回大廳</a>
+              <div>
+                  <div class="score-display">分數：<span id="scoreText">0</span></div>
+                  <div class="speed-display">速度：<span id="speedText">1.0</span>x</div>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                  <label class="upload-btn">
+                      📷 換圖
+                      <input type="file" id="imageInput" accept="image/*">
+                  </label>
+                  <a href="index.html" class="back-btn">返回</a>
+              </div>
           </div>
           <div class="start-screen" id="startScreen">
               <h1>🦖 小恐龍</h1>
               <p>空白鍵 / 點擊 跳躍</p>
+              <p style="font-size: 14px; color: #999;">可上傳圖片作為小恐龍</p>
               <button class="start-btn" id="startBtn">開始遊戲</button>
           </div>
           <div class="game-over-screen hidden" id="gameOverScreen">
@@ -133,17 +164,21 @@
           const canvas = document.getElementById('gameCanvas');
           const ctx = canvas.getContext('2d');
           const scoreText = document.getElementById('scoreText');
+          const speedText = document.getElementById('speedText');
           const finalScoreText = document.getElementById('finalScore');
           const startScreen = document.getElementById('startScreen');
           const gameOverScreen = document.getElementById('gameOverScreen');
           const startBtn = document.getElementById('startBtn');
           const restartBtn = document.getElementById('restartBtn');
+          const imageInput = document.getElementById('imageInput');
 
           // 遊戲狀態
           let isRunning = false;
           let score = 0;
           let frameCount = 0;
+          let baseSpeed = 6;
           let gameSpeed = 6;
+          let speedMultiplier = 1.0;
           let animationId = null;
 
           // 恐龍
@@ -158,12 +193,16 @@
               isJumping: false
           };
 
+          // 自訂圖片
+          let dinoImage = null;
+          let useCustomImage = false;
+
           // 障礙物
           let obstacles = [];
           const obstacleTypes = [
-              { width: 20, height: 40 },  // 小仙人掌
-              { width: 25, height: 50 },  // 中仙人掌
-              { width: 50, height: 45 }   // 大仙人掌
+              { width: 20, height: 40 },
+              { width: 25, height: 50 },
+              { width: 50, height: 45 }
           ];
           let minGap = 80;
 
@@ -186,44 +225,64 @@
               }
           }
 
-          // 繪製恐龍
+          // 載入自訂圖片
+          imageInput.addEventListener('change', (e) => {
+              const file = e.target.files[0];
+              if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                      const img = new Image();
+                      img.onload = () => {
+                          dinoImage = img;
+                          useCustomImage = true;
+                          // 調整恐龍尺寸為圖片原始尺寸（限制最大高度）
+                          const maxHeight = 60;
+                          const scale = img.height > maxHeight ? maxHeight / img.height : 1;
+                          dino.width = Math.round(img.width * scale);
+                          dino.height = Math.round(img.height * scale);
+                      };
+                      img.src = event.target.result;
+                  };
+                  reader.readAsDataURL(file);
+              }
+          });
+
+          // 繪製恐龍（使用圖片或預設黑色）
           function drawDino() {
-              ctx.fillStyle = '#4CAF50';
-              // 身體
-              ctx.fillRect(dino.x, dino.y, dino.width, dino.height - 10);
-              // 頭
-              ctx.fillRect(dino.x + 20, dino.y - 15, 24, 20);
-              // 眼睛
-              ctx.fillStyle = '#fff';
-              ctx.fillRect(dino.x + 35, dino.y - 10, 6, 6);
-              ctx.fillStyle = '#333';
-              ctx.fillRect(dino.x + 37, dino.y - 9, 3, 3);
-              // 腿
-              ctx.fillStyle = '#4CAF50';
-              const legOffset = isJumping() ? 0 : Math.sin(frameCount * 0.3) * 3;
-              ctx.fillRect(dino.x + 8, dino.y + dino.height - 15 + legOffset, 8, 15);
-              ctx.fillRect(dino.x + 26, dino.y + dino.height - 15 - legOffset, 8, 15);
-              // 尾巴
-              ctx.fillRect(dino.x - 5, dino.y + 5, 10, 8);
+              if (useCustomImage && dinoImage) {
+                  ctx.drawImage(dinoImage, dino.x, dino.y, dino.width, dino.height);
+              } else {
+                  // 預設黑色恐龍
+                  ctx.fillStyle = '#333';
+                  ctx.fillRect(dino.x, dino.y, dino.width, dino.height - 10);
+                  ctx.fillRect(dino.x + 20, dino.y - 15, 24, 20);
+                  ctx.fillStyle = '#fff';
+                  ctx.fillRect(dino.x + 35, dino.y - 10, 6, 6);
+                  ctx.fillStyle = '#333';
+                  ctx.fillRect(dino.x + 37, dino.y - 9, 3, 3);
+                  ctx.fillStyle = '#333';
+                  const legOffset = isJumping() ? 0 : Math.sin(frameCount * 0.3) * 3;
+                  ctx.fillRect(dino.x + 8, dino.y + dino.height - 15 + legOffset, 8, 15);
+                  ctx.fillRect(dino.x + 26, dino.y + dino.height - 15 - legOffset, 8, 15);
+                  ctx.fillRect(dino.x - 5, dino.y + 5, 10, 8);
+              }
           }
 
           function isJumping() {
               return dino.y < groundY - dino.height + 10;
           }
 
-          // 繪製障礙物
+          // 繪製障礙物（仙人掌）
           function drawObstacles() {
-              ctx.fillStyle = '#4CAF50';
+              ctx.fillStyle = '#2d5a27';
               obstacles.forEach(obs => {
-                  // 仙人掌主體
                   ctx.fillRect(obs.x, groundY - obs.height, obs.width, obs.height);
-                  // 刺
-                  ctx.fillStyle = '#66BB6A';
+                  ctx.fillStyle = '#3d7a37';
                   for (let i = 0; i < 3; i++) {
                       ctx.fillRect(obs.x - 4, groundY - obs.height + 8 + i * 12, 4, 6);
                       ctx.fillRect(obs.x + obs.width, groundY - obs.height + 8 + i * 12, 4, 6);
                   }
-                  ctx.fillStyle = '#4CAF50';
+                  ctx.fillStyle = '#2d5a27';
               });
           }
 
@@ -243,8 +302,6 @@
           function drawGround() {
               ctx.fillStyle = '#bdbdbd';
               ctx.fillRect(0, groundY, canvas.width, 2);
-
-              // 地面線條
               ctx.strokeStyle = '#9e9e9e';
               ctx.lineWidth = 1;
               for (let i = 0; i < 20; i++) {
@@ -268,16 +325,18 @@
           function update() {
               frameCount++;
 
-              // 更新分數
-              if (frameCount % 6 === 0) {
+              // 更新分數（速度越快加分越快）
+              if (frameCount % Math.max(3, Math.floor(6 / speedMultiplier)) === 0) {
                   score++;
                   scoreText.textContent = score;
               }
 
-              // 增加難度
-              if (frameCount % 500 === 0 && gameSpeed < 15) {
-                  gameSpeed += 0.5;
-                  minGap = Math.max(50, minGap - 5);
+              // 逐漸增加速度（每 300 幀加速 10%）
+              if (frameCount % 300 === 0) {
+                  speedMultiplier = Math.min(speedMultiplier + 0.1, 3.0);
+                  gameSpeed = baseSpeed * speedMultiplier;
+                  minGap = Math.max(40, 80 - Math.floor((speedMultiplier - 1) * 30));
+                  speedText.textContent = speedMultiplier.toFixed(1);
               }
 
               // 更新恐龍
@@ -290,7 +349,7 @@
               }
 
               // 更新障礙物
-              if (frameCount % minGap === 0 || obstacles.length === 0) {
+              if (frameCount % Math.max(30, Math.floor(minGap / speedMultiplier)) === 0 || obstacles.length === 0) {
                   const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
                   obstacles.push({
                       x: canvas.width + 50,
@@ -327,7 +386,6 @@
           function draw() {
               ctx.fillStyle = '#f7f7f7';
               ctx.fillRect(0, 0, canvas.width, canvas.height);
-
               drawClouds();
               drawGround();
               drawObstacles();
@@ -346,7 +404,6 @@
           function gameOver() {
               isRunning = false;
               cancelAnimationFrame(animationId);
-
               finalScoreText.textContent = score;
               gameOverScreen.classList.remove('hidden');
 
@@ -368,13 +425,18 @@
               isRunning = true;
               score = 0;
               frameCount = 0;
-              gameSpeed = 6;
+              speedMultiplier = 1.0;
+              gameSpeed = baseSpeed;
               minGap = 80;
               obstacles = [];
-              dino.y = groundY - dino.height + 10;
+              dino.y = groundY - (useCustomImage ? dino.height : dino.height);
               dino.vy = 0;
               dino.isJumping = false;
+              if (!useCustomImage) {
+                  dino.y = groundY - dino.height + 10;
+              }
               scoreText.textContent = '0';
+              speedText.textContent = '1.0';
               startScreen.classList.add('hidden');
               gameOverScreen.classList.add('hidden');
               initClouds();

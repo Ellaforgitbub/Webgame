@@ -11,29 +11,148 @@
             box-sizing: border-box;
         }
 
+        /* 預設深色模式變數 */
+        :root {
+            --bg-color: #121214;
+            --container-bg: rgba(255, 255, 255, 0.05);
+            --container-border: rgba(255, 255, 255, 0.1);
+            --text-color: #fff;
+            --cell-bg: #18181b;
+            --cell-border: #3f3f46;
+            --cell-orig-bg: #27272a;
+            --cell-orig-text: #a1a1aa;
+            --btn-bg: #27272a;
+            --btn-text: #fff;
+            --btn-border: #3f3f46;
+            --grid-line: #71717a;
+            --panel-bg: #1e1e24;
+        }
+
+        /* 淺色模式變數 */
+        [data-theme="light"] {
+            --bg-color: #f4f4f5;
+            --container-bg: rgba(0, 0, 0, 0.03);
+            --container-border: rgba(0, 0, 0, 0.1);
+            --text-color: #18181b;
+            --cell-bg: #ffffff;
+            --cell-border: #e4e4e7;
+            --cell-orig-bg: #f4f4f5;
+            --cell-orig-text: #71717a;
+            --btn-bg: #e4e4e7;
+            --btn-text: #18181b;
+            --btn-border: #d4d4d8;
+            --grid-line: #a1a1aa;
+            --panel-bg: #ffffff;
+        }
+
         body {
             min-height: 100vh;
-            background: #121214;
-            color: #fff;
+            background: var(--bg-color);
+            color: var(--text-color);
             font-family: 'Segoe UI', Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            transition: background 0.3s, color 0.3s;
+            position: relative;
         }
+
+        /* ===== 懸浮設定按鈕與面板 ===== */
+        .settings-wrapper {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        .settings-toggle-btn {
+            background: var(--btn-bg);
+            color: var(--text-color);
+            border: 1px solid var(--btn-border);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .settings-toggle-btn:hover {
+            transform: rotate(45deg);
+        }
+
+        .settings-panel {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: var(--panel-bg);
+            border: 1px solid var(--container-border);
+            border-radius: 12px;
+            padding: 15px;
+            width: 220px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .settings-panel.show {
+            display: flex;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+
+        /* Switch 開關樣式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 22px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #a855f7; }
+        input:checked + .slider:before { transform: translateX(22px); }
 
         /* ===== 難度選擇切換器 ===== */
         .difficulty-container {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
+            margin-top: 20px;
         }
 
         .diff-btn {
-            background: #27272a;
-            color: #a1a1aa;
-            border: 1px solid #3f3f46;
+            background: var(--btn-bg);
+            color: var(--cell-orig-text);
+            border: 1px solid var(--btn-border);
             padding: 6px 16px;
             font-size: 0.9rem;
             font-weight: bold;
@@ -43,8 +162,7 @@
         }
 
         .diff-btn:hover {
-            color: #fff;
-            border-color: #71717a;
+            color: var(--text-color);
         }
 
         .diff-btn.active[data-diff="easy"] {
@@ -69,17 +187,15 @@
             gap: 20px;
             margin-bottom: 20px;
             font-size: 1rem;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--container-bg);
             padding: 10px 20px;
             border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--container-border);
             flex-wrap: wrap;
             justify-content: center;
         }
 
-        .info-item span {
-            font-weight: bold;
-        }
+        .info-item span { font-weight: bold; }
         #score { color: #f59e0b; }
         #errors { color: #ef4444; }
         #timer { color: #3b82f6; }
@@ -92,10 +208,10 @@
             width: 100%;
             max-width: 450px;
             aspect-ratio: 1;
-            background: #27272a;
+            background: var(--btn-bg);
             border: 3px solid #a855f7;
             border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             margin-bottom: 25px;
         }
 
@@ -105,24 +221,22 @@
             justify-content: center;
             font-size: 1.4rem;
             font-weight: bold;
-            color: #e4e4e7;
-            background: #18181b;
-            border: 1px solid #3f3f46;
+            color: var(--text-color);
+            background: var(--cell-bg);
+            border: 1px solid var(--cell-border);
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
         }
 
-        /* 3x3 九宮格粗線邊框 */
-        .cell:nth-child(3n) { border-right: 2px solid #71717a; }
+        .cell:nth-child(3n) { border-right: 2px solid var(--grid-line); }
         .cell:nth-child(9n) { border-right: none; }
         .cell:nth-child(n+19):nth-child(-n+27),
-        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #71717a; }
+        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid var(--grid-line); }
 
-        /* 狀態樣式 */
         .cell.original {
-            background: #27272a;
-            color: #a1a1aa;
+            background: var(--cell-orig-bg);
+            color: var(--cell-orig-text);
             cursor: not-allowed;
         }
 
@@ -131,7 +245,7 @@
         }
 
         .cell.highlighted {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(168, 85, 247, 0.08);
         }
 
         .cell.wrong {
@@ -150,12 +264,13 @@
             gap: 10px;
             width: 100%;
             max-width: 450px;
+            min-height: 120px; /* 固定的高度防止按鈕隱藏時版面跳動 */
         }
 
         .num-btn {
-            background: #27272a;
-            color: #fff;
-            border: 1px solid #3f3f46;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            border: 1px solid var(--btn-border);
             padding: 15px 0;
             font-size: 1.3rem;
             font-weight: bold;
@@ -166,12 +281,26 @@
 
         .num-btn:hover {
             background: #a855f7;
+            color: #fff;
             transform: translateY(-2px);
         }
 
+        .num-btn.flash-active {
+            background: #f59e0b !important;
+            color: #000 !important;
+            border-color: #f59e0b;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
         .num-btn.btn-clear {
-            background: #3f3f46;
+            background: var(--cell-border);
             grid-column: span 1;
+        }
+
+        .num-btn.hidden {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
         }
 
         /* ===== 結算彈窗 ===== */
@@ -186,7 +315,7 @@
         }
 
         .modal-content {
-            background: #1e1e24;
+            background: var(--panel-bg);
             padding: 40px;
             border-radius: 20px;
             text-align: center;
@@ -195,7 +324,7 @@
         }
 
         .modal h2 { margin-bottom: 15px; font-size: 2rem; }
-        .modal p { color: #a1a1aa; margin-bottom: 25px; font-size: 1.1rem; }
+        .modal p { color: var(--cell-orig-text); margin-bottom: 25px; font-size: 1.1rem; }
         
         .win-title { color: #4ade80; }
         .lose-title { color: #ef4444; }
@@ -210,6 +339,26 @@
     </style>
 </head>
 <body>
+
+    <div class="settings-wrapper">
+        <button class="settings-toggle-btn" id="settingsToggle">⚙️</button>
+        <div class="settings-panel" id="settingsPanel">
+            <div class="setting-item">
+                <span>⚡ 閃電模式</span>
+                <label class="switch">
+                    <input type="checkbox" id="lightningSwitch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span>🌗 淺色佈景</span>
+                <label class="switch">
+                    <input type="checkbox" id="themeSwitch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
 
     <div class="difficulty-container">
         <button class="diff-btn" data-diff="easy">簡單</button>
@@ -226,7 +375,7 @@
 
     <div id="sudoku-board"></div>
 
-    <div class="num-pad">
+    <div class="num-pad" id="numPad">
         <button class="num-btn" data-num="1">1</button>
         <button class="num-btn" data-num="2">2</button>
         <button class="num-btn" data-num="3">3</button>
@@ -272,11 +421,16 @@
         let originalMask = []; 
 
         let selectedCellIndex = null;
+        let selectedLightningNum = null; // 閃電模式下選中的數字
+        
         let seconds = 0;
         let errorCount = 0;
         let currentScore = 0;
         let timerInterval = null;
         let gameActive = false;
+
+        // 設定開關狀態
+        let isLightningMode = false;
 
         const boardEl = document.getElementById('sudoku-board');
         const timerEl = document.getElementById('timer');
@@ -286,6 +440,12 @@
         const endModal = document.getElementById('endModal');
         const modalTitle = document.getElementById('modal-title');
         const modalMsg = document.getElementById('modal-msg');
+        
+        // 設定相關 DOM
+        const settingsToggle = document.getElementById('settingsToggle');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const lightningSwitch = document.getElementById('lightningSwitch');
+        const themeSwitch = document.getElementById('themeSwitch');
 
         function generateSudoku() {
             const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -325,19 +485,40 @@
                         cellEl.classList.add('original');
                     }
 
-                    cellEl.addEventListener('click', () => selectCell(index));
+                    cellEl.addEventListener('click', () => onCellClick(index));
                     boardEl.appendChild(cellEl);
                 }
             }
+            checkKeypadVisibility(); // 每次產生或更新盤面都確認一下按鈕
         }
 
-        function selectCell(index) {
+        // 當格子被點擊時
+        function onCellClick(index) {
             if (!gameActive) return;
+
+            if (isLightningMode) {
+                // 【閃電模式】：先點數字，此處直接將選中的數字填入點擊的格子中
+                if (selectedLightningNum === null) {
+                    // 如果還沒選定閃電數字，就單純作高亮十字，但不填值
+                    highlightCross(index);
+                    return;
+                }
+                const r = Math.floor(index / 9);
+                const c = index % 9;
+                if (originalMask[r][c]) return; // 原廠預設數字不可改
+
+                // 填入先前在鍵盤上按好的數字
+                executeFill(index, selectedLightningNum);
+                highlightCross(index);
+            } else {
+                // 【標準模式】：先點格子，再按數字
+                selectCell(index);
+            }
+        }
+
+        function highlightCross(index) {
             const r = Math.floor(index / 9);
             const c = index % 9;
-            if (originalMask[r][c]) return;
-
-            selectedCellIndex = index;
             const cells = document.querySelectorAll('.cell');
             cells.forEach((cell, i) => {
                 cell.classList.remove('selected', 'highlighted');
@@ -348,47 +529,27 @@
             cells[index].classList.add('selected');
         }
 
-        function calculateScore() {
-            let correctInputs = 0;
-            let wrongInputs = 0;
+        function selectCell(index) {
+            const r = Math.floor(index / 9);
+            const c = index % 9;
+            if (originalMask[r][c]) return;
 
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
-                    if (!originalMask[r][c] && boardState[r][c] !== 0) {
-                        if (boardState[r][c] === solution[r][c]) {
-                            correctInputs++;
-                        } else {
-                            wrongInputs++;
-                        }
-                    }
-                }
-            }
-            
-            // 每答對一格得 10 分，填錯每格扣 5 分
-            let score = (correctInputs * 10) - (wrongInputs * 5);
-            
-            // 如果全盤答對，加上難度加成分數
-            if (checkIsAllCorrect()) {
-                score += DIFF_SETTINGS[currentDifficulty].bonus;
-            }
-            
-            currentScore = Math.max(0, score);
-            scoreEl.textContent = currentScore;
+            selectedCellIndex = index;
+            highlightCross(index);
         }
 
-        function fillNumber(num) {
-            if (selectedCellIndex === null || !gameActive) return;
-
-            const r = Math.floor(selectedCellIndex / 9);
-            const c = selectedCellIndex % 9;
+        // 核心填值運算邏輯（抽離出來供標準模式與閃電模式共用）
+        function executeFill(index, num) {
+            const r = Math.floor(index / 9);
+            const c = index % 9;
             
             const prevValue = boardState[r][c];
-            if (prevValue === solution[r][c]) return; // 如果這格本來就填對了，不能再改
+            if (prevValue === solution[r][c]) return; // 如果這格原本就答對了，不能覆蓋
 
             boardState[r][c] = num;
             
             const cells = document.querySelectorAll('.cell');
-            const targetCell = cells[selectedCellIndex];
+            const targetCell = cells[index];
             targetCell.textContent = num !== 0 ? num : '';
 
             if (num !== 0) {
@@ -396,7 +557,6 @@
                     targetCell.classList.add('wrong');
                     targetCell.classList.remove('correct-input');
                     
-                    // 如果是「新填錯」才累計錯誤次數
                     if (prevValue !== num) {
                         errorCount++;
                         errorsEl.textContent = `${errorCount} / 3`;
@@ -415,10 +575,94 @@
             }
 
             calculateScore();
+            checkKeypadVisibility(); // 即時檢查該數字是否被填滿
 
             if (checkIsAllCorrect()) {
                 gameOver(true);
             }
+        }
+
+        // 接收鍵盤/操作面板發出的數字
+        function handleNumberInput(num) {
+            if (!gameActive) return;
+
+            if (isLightningMode) {
+                // 閃電模式：切換當前想「連點」的數字
+                if (num === 0) {
+                    selectedLightningNum = 0; // 橡皮擦連擦模式
+                } else {
+                    selectedLightningNum = num;
+                }
+                
+                // 更新按鈕高亮狀態
+                document.querySelectorAll('.num-btn').forEach(btn => {
+                    btn.classList.remove('flash-active');
+                    if (Number(btn.dataset.num) === num) {
+                        btn.classList.add('flash-active');
+                    }
+                });
+            } else {
+                // 標準模式：把數字填入選定的格子中
+                if (selectedCellIndex === null) return;
+                executeFill(selectedCellIndex, num);
+            }
+        }
+
+        // 檢查 1~9 某數字是否全部填完且全對，若是則隱藏按鈕
+        function checkKeypadVisibility() {
+            const counts = Array(10).fill(0); // 統計 1-9 在當前盤面正確填入的次數
+
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const val = boardState[r][c];
+                    // 必須是填入的值等於解答的值，才納入計數
+                    if (val !== 0 && val === solution[r][c]) {
+                        counts[val]++;
+                    }
+                }
+            }
+
+            // 走訪 1 到 9 按鈕
+            document.querySelectorAll('.num-btn').forEach(btn => {
+                const num = Number(btn.dataset.num);
+                if (num >= 1 && num <= 9) {
+                    if (counts[num] === 9) {
+                        btn.classList.add('hidden');
+                        // 如果閃電模式下被隱藏的數字剛好是選中的數字，取消選取
+                        if (isLightningMode && selectedLightningNum === num) {
+                            selectedLightningNum = null;
+                            btn.classList.remove('flash-active');
+                        }
+                    } else {
+                        btn.classList.remove('hidden');
+                    }
+                }
+            });
+        }
+
+        function calculateScore() {
+            let correctInputs = 0;
+            let wrongInputs = 0;
+
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (!originalMask[r][c] && boardState[r][c] !== 0) {
+                        if (boardState[r][c] === solution[r][c]) {
+                            correctInputs++;
+                        } else {
+                            wrongInputs++;
+                        }
+                    }
+                }
+            }
+            
+            let score = (correctInputs * 10) - (wrongInputs * 5);
+            if (checkIsAllCorrect()) {
+                score += DIFF_SETTINGS[currentDifficulty].bonus;
+            }
+            
+            currentScore = Math.max(0, score);
+            scoreEl.textContent = currentScore;
         }
 
         function checkIsAllCorrect() {
@@ -447,7 +691,6 @@
 
             endModal.style.display = 'flex';
 
-            // 回傳最新積分數據到大廳
             window.parent.postMessage({
                 type: 'gameScore',
                 game: 'sudoku',
@@ -464,6 +707,7 @@
         function restartGame() {
             endModal.style.display = 'none';
             selectedCellIndex = null;
+            selectedLightningNum = null;
             errorCount = 0;
             currentScore = 0;
             seconds = 0;
@@ -472,6 +716,9 @@
             errorsEl.textContent = "0 / 3";
             scoreEl.textContent = "0";
             timerEl.textContent = "00:00";
+
+            // 清理閃電高亮樣式
+            document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('flash-active'));
 
             generateSudoku();
             renderBoard();
@@ -488,6 +735,40 @@
             }, 1000);
         }
 
+        // ===== 事件監聽 =====
+
+        // 齒輪選單開關
+        settingsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsPanel.classList.toggle('show');
+        });
+
+        // 點擊外面會收起設定選單
+        document.addEventListener('click', () => {
+            settingsPanel.classList.remove('show');
+        });
+        settingsPanel.addEventListener('click', (e) => e.stopPropagation());
+
+        // 閃電模式 Switch 切換
+        lightningSwitch.addEventListener('change', (e) => {
+            isLightningMode = e.target.checked;
+            // 切換模式時，把舊的選擇狀態清除
+            selectedCellIndex = null;
+            selectedLightningNum = null;
+            document.querySelectorAll('.cell').forEach(c => c.classList.remove('selected', 'highlighted'));
+            document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('flash-active'));
+        });
+
+        // 深淺色主題切換
+        themeSwitch.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        });
+
+        // 難度按鈕切換
         document.querySelectorAll('.diff-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
@@ -503,14 +784,21 @@
             });
         });
 
+        // 虛擬螢幕鍵盤按鈕點擊
         document.querySelectorAll('.num-btn').forEach(btn => {
-            btn.addEventListener('click', () => fillNumber(Number(btn.dataset.num)));
+            btn.addEventListener('click', () => {
+                handleNumberInput(Number(btn.dataset.num));
+            });
         });
 
+        // 實體電腦鍵盤輸入支援
         document.addEventListener('keydown', (e) => {
             if (!gameActive) return;
-            if (e.key >= '1' && e.key <= '9') fillNumber(Number(e.key));
-            else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') fillNumber(0);
+            if (e.key >= '1' && e.key <= '9') {
+                handleNumberInput(Number(e.key));
+            } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+                handleNumberInput(0);
+            }
         });
 
         restartGame();

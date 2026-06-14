@@ -288,8 +288,7 @@
 <body>
 
     <div id="header">
-        <div class="user-info" id="userInfo">
-            </div>
+        <div class="user-info" id="userInfo"></div>
     </div>
 
     <div class="container" id="lobbyContainer">
@@ -324,7 +323,7 @@
             <div class="game-card" data-game="sudoku">
                 <span class="game-icon">🧩</span>
                 <h3 class="game-title">數獨挑戰</h3>
-                <p class="game-desc">經典九宮格邏輯填數字遊戲，用最短的時間填滿所有正確格子！</p>
+                <p class="game-desc">經典九宮格邏輯填數字遊戲，用高超的眼力與邏輯獲取最高分！</p>
             </div>
         </div>
 
@@ -348,8 +347,7 @@
                         <th style="text-align: right;">最高紀錄</th>
                     </tr>
                 </thead>
-                <tbody id="leaderboardBody">
-                    </tbody>
+                <tbody id="leaderboardBody"></tbody>
             </table>
         </div>
     </div>
@@ -360,7 +358,6 @@
     </div>
 
     <script>
-        // 常數配置
         const STORAGE_KEYS = {
             currentUser: 'currentUser',
             players: 'players'
@@ -375,7 +372,6 @@
             'sudoku': 'sudoku.html'
         };
 
-        // DOM 元素選取
         const userInfoEl = document.getElementById('userInfo');
         const lobbyContainer = document.getElementById('lobbyContainer');
         const gameArea = document.getElementById('gameArea');
@@ -387,7 +383,6 @@
         const leaderboardBody = document.getElementById('leaderboardBody');
         const lbTabs = document.querySelectorAll('.lb-tab');
 
-        // ===== 使用者狀態認證 =====
         function getCurrentUser() {
             const userJson = localStorage.getItem(STORAGE_KEYS.currentUser);
             return userJson ? JSON.parse(userJson) : null;
@@ -411,7 +406,6 @@
             }
         }
 
-        // ===== 遊戲開啟與登入防護 =====
         function checkLoginAndOpenGame(gameName) {
             const currentUser = getCurrentUser();
             if (!currentUser) {
@@ -420,7 +414,6 @@
                 return;
             }
 
-            // 切換至 iframe 檢視
             lobbyContainer.style.opacity = '0';
             setTimeout(() => {
                 gameFrame.src = gameFiles[gameName];
@@ -434,7 +427,6 @@
             gameFrame.src = '';
             document.body.style.overflow = 'auto';
             lobbyContainer.style.opacity = '1';
-            // 離開遊戲時刷新目前選取分頁的排行榜
             const activeTab = document.querySelector('.lb-tab.active');
             if (activeTab) renderLeaderboard(activeTab.dataset.game);
         }
@@ -447,7 +439,6 @@
             const players = JSON.parse(playersJson);
             const records = [];
 
-            // 提取各玩家該遊戲的成績
             for (const username in players) {
                 if (players[username].scores && players[username].scores[game] !== undefined) {
                     records.push({
@@ -457,16 +448,15 @@
                 }
             }
 
-            // 決定排序方式：時間類遊戲（迷宮、地雷、數獨）用正數秒數儲存，秒數越少（越快）排名越前
-            const isTimeGame = (game === 'maze' || game === 'minesweeper' || game === 'sudoku');
+            // 【已修正】數獨已從時間類移出，現在只有迷宮與踩地雷是時間類（越小越好）
+            const isTimeGame = (game === 'maze' || game === 'minesweeper');
             
             if (isTimeGame) {
-                records.sort((a, b) => a.score - b.score);
+                records.sort((a, b) => a.score - b.score); // 依時間升序
             } else {
-                records.sort((a, b) => b.score - a.score);
+                records.sort((a, b) => b.score - a.score); // 依分數降序
             }
 
-            // 取前 10 名
             return records.slice(0, 10);
         }
 
@@ -479,7 +469,8 @@
                 return;
             }
 
-            const isTimeGame = (game === 'maze' || game === 'minesweeper' || game === 'sudoku');
+            // 【已修正】移出數獨
+            const isTimeGame = (game === 'maze' || game === 'minesweeper');
 
             records.forEach((row, index) => {
                 const rank = index + 1;
@@ -512,16 +503,16 @@
             }
 
             const oldScore = players[username].scores[game];
-            const isTimeGame = (game === 'maze' || game === 'minesweeper' || game === 'sudoku');
+            // 【已修正】移出數獨
+            const isTimeGame = (game === 'maze' || game === 'minesweeper');
 
             if (oldScore === undefined) {
                 players[username].scores[game] = newScore;
             } else {
                 if (isTimeGame) {
-                    // 時間類：秒數越少越好
                     if (newScore < oldScore) players[username].scores[game] = newScore;
                 } else {
-                    // 分數類：數值越大越好
+                    // 數獨現在會走這裡：分數越高越好！
                     if (newScore > oldScore) players[username].scores[game] = newScore;
                 }
             }
@@ -547,7 +538,6 @@
         });
 
         leaderboardHeader.addEventListener('click', (e) => {
-            // 防止點擊頁籤也把面板收合
             if (e.target.classList.contains('lb-tab')) return;
             leaderboard.classList.toggle('collapsed');
         });
@@ -560,20 +550,17 @@
             });
         });
 
-        // ===== 優化 iframe 分數接收機制 =====
         window.addEventListener('message', (e) => {
             if (e.data && e.data.type === 'gameScore') {
                 const currentUser = getCurrentUser();
                 if (currentUser) {
-                    // 統一轉為正數處理（數獨在 checkWin 會回傳正數秒數）
                     updateScore(e.data.game, currentUser.username, Math.abs(e.data.score));
                 }
             }
         });
 
-        // ===== 初始化程序 =====
         renderUserHeader();
-        renderLeaderboard('2048'); // 預設顯示 2048 排行榜
+        renderLeaderboard('2048');
     </script>
 </body>
 </html>

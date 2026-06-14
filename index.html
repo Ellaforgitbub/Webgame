@@ -527,8 +527,8 @@
 
             const oldScore = players[username].scores[game];
             
-            // 處理特殊判斷邏輯（如時間類遊戲迷宮與地雷、數獨：越少秒越厲害）
-            if (game === 'maze' || game === 'minesweeper' || game === 'sudoku') {
+            // 處理特殊判斷邏輯（如時間類遊戲迷宮與地雷：越少秒越厲害）
+            if (game === 'maze' || game === 'minesweeper') {
                 if (oldScore === undefined || score < oldScore) {
                     players[username].scores[game] = score;
                 }
@@ -558,7 +558,7 @@
             }
 
             // 排序規則
-            if (game === 'maze' || game === 'minesweeper' || game === 'sudoku') {
+            if (game === 'maze' || game === 'minesweeper') {
                 // 秒數越少排在越前面
                 list.sort((a, b) => a.score - b.score);
             } else {
@@ -578,10 +578,10 @@
             top10.forEach((item, index) => {
                 const div = document.createElement('div');
                 div.className = 'lb-item';
-                
+
                 // 格式化輸出後方的分數意義
                 let scoreDisplay = item.score;
-                if (game === 'maze' || game === 'minesweeper' || game === 'sudoku') {
+                if (game === 'maze' || game === 'minesweeper') {
                     scoreDisplay = `${item.score} 秒`;
                 } else {
                     scoreDisplay = `${item.score} 分`;

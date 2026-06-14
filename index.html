@@ -46,115 +46,261 @@
             backdrop-filter: blur(5px);
         }
 
-        .btn-auth, .btn-logout {
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            color: #fff;
+        .btn {
+            padding: 8px 16px;
+            font-size: 1rem;
+            font-weight: 600;
             border: none;
-            padding: 8px 20px;
             border-radius: 20px;
-            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
-            text-decoration: none;
-            font-size: 0.9rem;
         }
 
-        .btn-logout {
-            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
-            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
-        }
-
-        .btn-auth:hover, .btn-logout:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
-        }
-
-        /* ===== 主容器 ===== */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 80px 40px 40px 40px;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        h1.lobby-title {
+        .btn-primary {
+            background: #e94560;
             color: #fff;
-            text-align: center;
-            font-size: 3rem;
-            margin-bottom: 50px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-            letter-spacing: 2px;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
         }
 
-        /* ===== 遊戲卡片網格 ===== */
+        .btn-primary:hover {
+            background: #ff527b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* ===== 主容器佈局 ===== */
+        .main-container {
+            display: flex;
+            padding: 80px 40px 40px 40px;
+            gap: 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* ===== 遊戲大廳主區 ===== */
+        .lobby-content {
+            flex: 1;
+        }
+
+        .lobby-title {
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
         .game-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 30px;
-            margin-bottom: 50px;
         }
 
         .game-card {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+            border-radius: 15px;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
 
         .game-card::before {
             content: '';
             position: absolute;
-            top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: 0.5s;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 15px;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
         }
 
-        .game-card:hover::before { left: 100%; }
+        .game-card:hover::before {
+            transform: translateX(100%);
+        }
 
         .game-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(0, 242, 254, 0.5);
-            box-shadow: 0 15px 30px rgba(0, 242, 254, 0.2);
+            transform: translateY(-100px);
+            border-color: #e94560;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(233, 69, 96, 0.3);
         }
 
-        .game-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            display: inline-block;
+        .game-img {
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4.5rem;
+            background: rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease;
         }
 
-        .game-card:hover .game-icon {
-            transform: scale(1.1) rotate(5deg);
+        .game-card:hover .game-img {
+            transform: scale(1.05);
         }
 
-        .game-title {
+        /* 替各遊戲設定卡片頂部漸層顏色 */
+        .game-card[data-game="2048"] .game-img { background: linear-gradient(135deg, #f2b179, #ede0c8); }
+        .game-card[data-game="snake"] .game-img { background: linear-gradient(135deg, #11998e, #38ef7d); }
+        .game-card[data-game="maze"] .game-img { background: linear-gradient(135deg, #141e30, #243b55); }
+        .game-card[data-game="minesweeper"] .game-img { background: linear-gradient(135deg, #4b6cb7, #182848); }
+        .game-card[data-game="dino"] .game-img { background: linear-gradient(135deg, #83a4d4, #b6fbff); }
+        .game-card[data-game="sudoku"] .game-img { background: linear-gradient(135deg, #654ea3, #eaafc8); }
+
+        .game-info {
+            padding: 20px;
+            background: rgba(15, 22, 38, 0.8);
+            flex: 1;
+        }
+
+        .game-name {
             color: #fff;
-            font-size: 1.5rem;
-            margin-bottom: 10px;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .game-desc {
-            color: #8fa0a3;
+            color: #8c92ac;
             font-size: 0.9rem;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
-        /* ===== 嵌入遊戲區域 ===== */
+        /* ===== 排行榜區塊 ===== */
+        #leaderboard {
+            width: 380px;
+            background: rgba(22, 33, 62, 0.7);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .lb-header {
+            padding: 20px;
+            background: rgba(15, 22, 38, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .lb-title {
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 排行榜分頁標籤 */
+        .lb-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 5px;
+            gap: 5px;
+            overflow-x: auto;
+        }
+        .lb-tabs::-webkit-scrollbar { display: none; } /* 隱藏滾動條 */
+
+        .lb-tab {
+            padding: 8px 12px;
+            color: #8c92ac;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .lb-tab:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .lb-tab.active {
+            color: #fff;
+            background: #e94560;
+            font-weight: 600;
+        }
+
+        .lb-body {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .lb-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s ease;
+        }
+        .lb-item:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .lb-rank {
+            width: 30px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #8c92ac;
+        }
+        .lb-item:nth-child(1) .lb-rank { color: #ffd700; font-size: 1.3rem; }
+        .lb-item:nth-child(2) .lb-rank { color: #c0c0c0; font-size: 1.2rem; }
+        .lb-item:nth-child(3) .lb-rank { color: #cd7f32; font-size: 1.2rem; }
+
+        .lb-name {
+            flex: 1;
+            color: #fff;
+            font-weight: 500;
+            padding-left: 10px;
+        }
+
+        .lb-score {
+            color: #e94560;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .lb-empty {
+            color: #8c92ac;
+            text-align: center;
+            padding: 40px 0;
+            font-style: italic;
+        }
+
+        /* ===== 嵌入遊戲獨立區域 ===== */
         #gameArea {
-            display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: #000;
             z-index: 100;
+            display: none;
         }
 
         #gameFrame {
@@ -163,362 +309,291 @@
             border: none;
         }
 
-        .btn-back {
-            position: fixed;
+        /* ===== 【核心修改】返回大廳按鈕優化（全地形高辨識度） ===== */
+        #backBtn {
+            position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 10px 18px;
+            /* 使用固定深色半透明毛玻璃背景，無論在淺色或深色遊戲上都能完美浮現 */
+            background: rgba(15, 23, 42, 0.8); 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            
+            /* 亮色高對比文字與細邊框 */
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px; /* 膠囊形狀設計 */
+            
+            font-size: 0.95rem;
+            font-weight: 600;
             cursor: pointer;
-            backdrop-filter: blur(5px);
-            z-index: 101;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        .btn-back:hover {
-            background: #fff;
-            color: #000;
-        }
-
-        /* ===== 排行榜區塊 ===== */
-        #leaderboard {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px 20px 0 0;
-            padding: 20px;
-            margin-top: 50px;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
-            transition: all 0.4s ease;
-        }
-
-        #leaderboard.collapsed {
-            transform: translateY(calc(100% - 60px));
-            position: fixed;
-            bottom: 0; left: 50%;
-            transform: translateX(-50%) translateY(calc(100% - 60px));
-            width: calc(100% - 80px);
-            max-width: 1200px;
-            margin-top: 0;
-        }
-
-        .lb-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #fff;
-            margin-bottom: 20px;
-            cursor: pointer;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .lb-title {
+            z-index: 110;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 1.3rem;
+            gap: 6px;
+            
+            /* 強力投影，與下方的遊戲 iframe 產生明確的立體分離感 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 
+                        0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
         }
 
-        .lb-tabs {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 5px;
+        /* 懸停動態效果 */
+        #backBtn:hover {
+            background: rgba(15, 23, 42, 0.95);
+            color: #38bdf8; /* 懸停時文字變為明亮的淡藍色 */
+            border-color: rgba(56, 189, 248, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
         }
 
-        .lb-tab {
-            color: #8fa0a3;
-            padding: 6px 16px;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
+        /* 點擊動態效果 */
+        #backBtn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
-        .lb-tab:hover, .lb-tab.active {
-            color: #fff;
-            background: rgba(0, 242, 254, 0.2);
-            border-color: rgba(0, 242, 254, 0.4);
-        }
-
-        .lb-table {
-            width: 100%;
-            border-collapse: collapse;
-            color: #fff;
-            text-align: left;
-        }
-
-        .lb-table th, .lb-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .lb-table th {
-            color: #8fa0a3;
-            font-weight: normal;
-            font-size: 0.9rem;
-        }
-
-        .lb-table tr:hover td {
-            background: rgba(255,255,255,0.02);
-        }
-
-        .rank-1 { color: #ffd700; font-weight: bold; }
-        .rank-2 { color: #c0c0c0; font-weight: bold; }
-        .rank-3 { color: #cd7f32; font-weight: bold; }
-
-        .no-data {
-            text-align: center;
-            color: #8fa0a3;
-            padding: 30px !important;
-            font-style: italic;
+        /* 響應式：平板與手機收合排行榜 */
+        @media (max-width: 1024px) {
+            .main-container { flex-direction: column; padding: 80px 20px 20px 20px; }
+            #leaderboard { width: 100%; max-height: 400px; }
+            #leaderboard.collapsed { max-height: 65px; }
+            #leaderboard.collapsed .lb-body, #leaderboard.collapsed .lb-tabs { display: none; }
         }
     </style>
 </head>
 <body>
 
     <div id="header">
-        <div class="user-info" id="userInfo"></div>
+        <div id="userSection" class="user-info">
+            </div>
     </div>
 
-    <div class="container" id="lobbyContainer">
-        <h1 class="lobby-title">🕹️ 經典遊戲大廳</h1>
-        
-        <div class="game-grid">
-            <div class="game-card" data-game="2048">
-                <span class="game-icon">🔢</span>
-                <h3 class="game-title">2048</h3>
-                <p class="game-desc">經典方塊數字合併遊戲，滑動方塊合成出 2048 吧！</p>
-            </div>
-            <div class="game-card" data-game="snake">
-                <span class="game-icon">🐍</span>
-                <h3 class="game-title">貪吃蛇</h3>
-                <p class="game-desc">控制小蛇吞食果實，注意不要撞到牆壁或自己。機甲風格畫風！</p>
-            </div>
-            <div class="game-card" data-game="maze">
-                <span class="game-icon">🧭</span>
-                <h3 class="game-title">逃出深淵 (迷宮)</h3>
-                <p class="game-desc">迷宮探險！閃避隨機遊蕩的怪物，尋找通往下一關的終點。</p>
-            </div>
-            <div class="game-card" data-game="minesweeper">
-                <span class="game-icon">💣</span>
-                <h3 class="game-title">經典踩地雷</h3>
-                <p class="game-desc">運用邏輯推演找出所有藏在網格底下的危險地雷。</p>
-            </div>
-            <div class="game-card" data-game="dino">
-                <span class="game-icon">🦖</span>
-                <h3 class="game-title">小恐龍</h3>
-                <p class="game-desc">點擊跳躍，躲避仙人掌與翼龍，看看你能跑多遠！</p>
-            </div>
-            <div class="game-card" data-game="sudoku">
-                <span class="game-icon">🧩</span>
-                <h3 class="game-title">數獨挑戰</h3>
-                <p class="game-desc">經典九宮格邏輯填數字遊戲，用高超的眼力與邏輯獲取最高分！</p>
+    <div class="main-container">
+        <div class="lobby-content">
+            <h1 class="lobby-title">🕹️ 精選迷你遊戲大廳</h1>
+            <div class="game-grid">
+                <div class="game-card" data-game="2048">
+                    <div class="game-img">🧩</div>
+                    <div class="game-info">
+                        <div class="game-name">2048 滑動方塊</div>
+                        <div class="game-desc">經典數字合併遊戲！這次加入了超流暢的平移滑動與合併彈跳動態手感，滑出你的 2048 吧！</div>
+                    </div>
+                </div>
+                <div class="game-card" data-game="snake">
+                    <div class="game-img">🐍</div>
+                    <div class="game-info">
+                        <div class="game-name">經典貪吃蛇</div>
+                        <div class="game-desc">控制小蛇吞下食物，小心不要咬到自己的身體或撞到邊框，看你能長到多長！</div>
+                    </div>
+                </div>
+                <div class="game-card" data-game="maze">
+                    <div class="game-img">🏛️</div>
+                    <div class="game-info">
+                        <div class="game-name">逃出深淵 (迷宮)</div>
+                        <div class="game-desc">動態生成的隨機黑暗迷宮，拾取寶物、擊敗守衛怪物，用最快的速度尋找傳送陣逃脫！</div>
+                    </div>
+                </div>
+                <div class="game-card" data-game="minesweeper">
+                    <div class="game-img">💣</div>
+                    <div class="game-info">
+                        <div class="game-name">極簡踩地雷</div>
+                        <div class="game-desc">考驗邏輯推理的經典排雷遊戲，提供自訂尺寸與多種難度，安全找出所有隱藏地雷。</div>
+                    </div>
+                </div>
+                <div class="game-card" data-game="dino">
+                    <div class="game-img">🦖</div>
+                    <div class="game-info">
+                        <div class="game-name">小恐龍跑酷</div>
+                        <div class="game-desc">跳過仙人掌與飛鳥！隨著分數提高遊戲速度會逐漸加快，挑戰你的極限反應力。</div>
+                    </div>
+                </div>
+                <div class="game-card" data-game="sudoku">
+                    <div class="game-img">🔢</div>
+                    <div class="game-info">
+                        <div class="game-name">數獨挑戰</div>
+                        <div class="game-desc">九宮格邏輯思維訓練。支援深色與淺色風格切換、錯誤自動標記以及即時關卡重打。</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="leaderboard">
-            <div class="lb-header" id="leaderboardHeader">
-                <div class="lb-title">📊 頂尖玩家排行榜 (TOP 10)</div>
-                <div class="lb-tabs" id="lbTabs">
-                    <div class="lb-tab active" data-game="2048">2048</div>
-                    <div class="lb-tab" data-game="snake">貪吃蛇</div>
-                    <div class="lb-tab" data-game="maze">逃出深淵</div>
-                    <div class="lb-tab" data-game="minesweeper">踩地雷</div>
-                    <div class="lb-tab" data-game="dino">小恐龍</div>
-                    <div class="lb-tab" data-game="sudoku">數獨</div>
-                </div>
+        <div id="leaderboard" class="collapsed">
+            <div class="lb-header">
+                <div class="lb-title">🏆 玩家榮譽榜 <span style="font-size:0.9rem; color:#8c92ac; margin-left:auto;">(點擊收合)</span></div>
             </div>
-            <table class="lb-table">
-                <thead>
-                    <tr>
-                        <th style="width: 80px;">名次</th>
-                        <th>玩家暱稱</th>
-                        <th style="text-align: right;">最高紀錄</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboardBody"></tbody>
-            </table>
+            <div class="lb-tabs">
+                <div class="lb-tab active" data-game="2048">2048</div>
+                <div class="lb-tab" data-game="snake">貪吃蛇</div>
+                <div class="lb-tab" data-game="maze">迷宮</div>
+                <div class="lb-tab" data-game="minesweeper">踩地雷</div>
+                <div class="lb-tab" data-game="dino">小恐龍</div>
+                <div class="lb-tab" data-game="sudoku">數獨</div>
+            </div>
+            <div class="lb-body" id="leaderboardBody">
+                </div>
         </div>
     </div>
 
     <div id="gameArea">
-        <button class="btn-back" id="backBtn">⬅ 離開遊戲</button>
+        <button id="backBtn">⬅ 返回遊戲大廳</button>
         <iframe id="gameFrame" src=""></iframe>
     </div>
 
     <script>
+        // 本地儲存金鑰定義
         const STORAGE_KEYS = {
-            currentUser: 'currentUser',
-            players: 'players'
+            players: 'players',
+            currentUser: 'currentUser'
         };
 
-        const gameFiles = {
-            '2048': '2048.html',
-            'snake': 'snake.html',
-            'maze': 'maze.html',
-            'minesweeper': 'minesweeper.html',
-            'dino': 'dino.html',
-            'sudoku': 'sudoku.html'
-        };
-
-        const userInfoEl = document.getElementById('userInfo');
-        const lobbyContainer = document.getElementById('lobbyContainer');
+        // DOM 節點獲取
+        const userSection = document.getElementById('userSection');
+        const gameCards = document.querySelectorAll('.game-card');
         const gameArea = document.getElementById('gameArea');
         const gameFrame = document.getElementById('gameFrame');
         const backBtn = document.getElementById('backBtn');
-        const gameCards = document.querySelectorAll('.game-card');
         const leaderboard = document.getElementById('leaderboard');
-        const leaderboardHeader = document.getElementById('leaderboardHeader');
+        const leaderboardHeader = document.querySelector('.lb-header');
         const leaderboardBody = document.getElementById('leaderboardBody');
         const lbTabs = document.querySelectorAll('.lb-tab');
 
+        // ===== 登入與玩家狀態管理 =====
         function getCurrentUser() {
-            const userJson = localStorage.getItem(STORAGE_KEYS.currentUser);
-            return userJson ? JSON.parse(userJson) : null;
+            const data = localStorage.getItem(STORAGE_KEYS.currentUser);
+            return data ? JSON.parse(data) : null;
         }
 
-        function renderUserHeader() {
+        function renderUserSection() {
             const currentUser = getCurrentUser();
             if (currentUser) {
-                userInfoEl.innerHTML = `
-                    <span class="user-name">👤 在線玩家：${currentUser.username}</span>
-                    <button class="btn-logout" id="logoutBtn">登出系統</button>
+                userSection.innerHTML = `
+                    <span class="user-name">👤 ${currentUser.username}</span>
+                    <button class="btn btn-secondary" id="logoutBtn">登出</button>
                 `;
                 document.getElementById('logoutBtn').addEventListener('click', () => {
                     localStorage.removeItem(STORAGE_KEYS.currentUser);
-                    renderUserHeader();
+                    renderUserSection();
+                    // 登出時重新導向到登入畫面
+                    window.location.href = 'login.html';
                 });
             } else {
-                userInfoEl.innerHTML = `
-                    <a href="login.html" class="btn-auth">🔐 登入 / 註冊帳號</a>
+                userSection.innerHTML = `
+                    <button class="btn btn-primary" onclick="window.location.href='login.html'">登入 / 註冊</button>
                 `;
             }
         }
 
+        // ===== 遊戲開啟與關閉邏輯 =====
         function checkLoginAndOpenGame(gameName) {
             const currentUser = getCurrentUser();
             if (!currentUser) {
-                alert('⚠️ 請先登入或註冊帳號，才能開啟遊戲並儲存排行榜數據！');
+                alert('請先登入帳號，才能開啟遊戲並記錄分數喔！');
                 window.location.href = 'login.html';
                 return;
             }
+            openGame(gameName);
+        }
 
-            lobbyContainer.style.opacity = '0';
-            setTimeout(() => {
-                gameFrame.src = gameFiles[gameName];
-                gameArea.style.display = 'block';
-                document.body.style.overflow = 'hidden';
-            }, 300);
+        function openGame(gameName) {
+            gameFrame.src = `${gameName}.html`;
+            gameArea.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // 防止主頁面跟著滾動
         }
 
         function closeGame() {
             gameArea.style.display = 'none';
             gameFrame.src = '';
             document.body.style.overflow = 'auto';
-            lobbyContainer.style.opacity = '1';
+            // 當玩家關閉遊戲時，自動刷新大廳對應遊戲的排行榜
             const activeTab = document.querySelector('.lb-tab.active');
             if (activeTab) renderLeaderboard(activeTab.dataset.game);
         }
 
-        // ===== 排行榜數據處理機制 =====
-        function getLeaderboardData(game) {
-            const playersJson = localStorage.getItem(STORAGE_KEYS.players);
-            if (!playersJson) return [];
+        // ===== 排行榜核心控制邏輯 =====
+        function getPlayersData() {
+            const data = localStorage.getItem(STORAGE_KEYS.players);
+            return data ? JSON.parse(data) : {};
+        }
 
-            const players = JSON.parse(playersJson);
-            const records = [];
+        function updateScore(game, username, score) {
+            const players = getPlayersData();
+            if (!players[username]) return;
 
+            if (!players[username].scores) {
+                players[username].scores = {};
+            }
+
+            const oldScore = players[username].scores[game];
+            
+            // 處理特殊判斷邏輯（如時間類遊戲迷宮與地雷、數獨：越少秒越厲害）
+            if (game === 'maze' || game === 'minesweeper' || game === 'sudoku') {
+                if (oldScore === undefined || score < oldScore) {
+                    players[username].scores[game] = score;
+                }
+            } else {
+                // 積分制遊戲（如 2048、貪吃蛇、小恐龍：越高分越厲害）
+                if (oldScore === undefined || score > oldScore) {
+                    players[username].scores[game] = score;
+                }
+            }
+            
+            localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(players));
+            renderLeaderboard(game);
+        }
+
+        function renderLeaderboard(game) {
+            const players = getPlayersData();
+            const list = [];
+
+            // 提取有玩過該款遊戲的所有玩家資料
             for (const username in players) {
                 if (players[username].scores && players[username].scores[game] !== undefined) {
-                    records.push({
+                    list.push({
                         username: username,
                         score: players[username].scores[game]
                     });
                 }
             }
 
-            // 【已修正】數獨已從時間類移出，現在只有迷宮與踩地雷是時間類（越小越好）
-            const isTimeGame = (game === 'maze' || game === 'minesweeper');
-            
-            if (isTimeGame) {
-                records.sort((a, b) => a.score - b.score); // 依時間升序
+            // 排序規則
+            if (game === 'maze' || game === 'minesweeper' || game === 'sudoku') {
+                // 秒數越少排在越前面
+                list.sort((a, b) => a.score - b.score);
             } else {
-                records.sort((a, b) => b.score - a.score); // 依分數降序
+                // 分數越高排在越前面
+                list.sort((a, b) => b.score - a.score);
             }
 
-            return records.slice(0, 10);
-        }
-
-        function renderLeaderboard(game) {
-            const records = getLeaderboardData(game);
             leaderboardBody.innerHTML = '';
 
-            if (records.length === 0) {
-                leaderboardBody.innerHTML = `<tr><td colspan="3" class="no-data">暫無玩家紀錄，快來搶佔第一名！</td></tr>`;
+            if (list.length === 0) {
+                leaderboardBody.innerHTML = '<div class="lb-empty">目前暫無排行紀錄</div>';
                 return;
             }
 
-            // 【已修正】移出數獨
-            const isTimeGame = (game === 'maze' || game === 'minesweeper');
-
-            records.forEach((row, index) => {
-                const rank = index + 1;
-                let rankClass = '';
-                if (rank === 1) rankClass = 'rank-1';
-                else if (rank === 2) rankClass = 'rank-2';
-                else if (rank === 3) rankClass = 'rank-3';
-
-                let scoreDisplay = isTimeGame ? `${row.score} 秒` : `${row.score} 分`;
-
-                leaderboardBody.innerHTML += `
-                    <tr>
-                        <td class="${rankClass}">#${rank}</td>
-                        <td>${row.username}</td>
-                        <td style="text-align: right; font-weight: bold; color: ${rank <= 3 ? '#00f2fe' : '#fff'}">${scoreDisplay}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        function updateScore(game, username, newScore) {
-            const playersJson = localStorage.getItem(STORAGE_KEYS.players);
-            const players = playersJson ? JSON.parse(playersJson) : {};
-
-            if (!players[username]) {
-                players[username] = { scores: {} };
-            }
-            if (!players[username].scores) {
-                players[username].scores = {};
-            }
-
-            const oldScore = players[username].scores[game];
-            // 【已修正】移出數獨
-            const isTimeGame = (game === 'maze' || game === 'minesweeper');
-
-            if (oldScore === undefined) {
-                players[username].scores[game] = newScore;
-            } else {
-                if (isTimeGame) {
-                    if (newScore < oldScore) players[username].scores[game] = newScore;
+            // 僅顯示前 10 名
+            const top10 = list.slice(0, 10);
+            top10.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'lb-item';
+                
+                // 格式化輸出後方的分數意義
+                let scoreDisplay = item.score;
+                if (game === 'maze' || game === 'minesweeper' || game === 'sudoku') {
+                    scoreDisplay = `${item.score} 秒`;
                 } else {
-                    // 數獨現在會走這裡：分數越高越好！
-                    if (newScore > oldScore) players[username].scores[game] = newScore;
+                    scoreDisplay = `${item.score} 分`;
                 }
-            }
 
-            localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(players));
-            renderLeaderboard(game);
+                div.innerHTML = `
+                    <div class="lb-rank">${index + 1}</div>
+                    <div class="lb-name">${item.username}</div>
+                    <div class="lb-score">${scoreDisplay}</div>
+                `;
+                leaderboardBody.appendChild(div);
+            });
         }
 
         // ===== 事件監聽綁定 =====
@@ -550,17 +625,20 @@
             });
         });
 
+        // ===== 優化 iframe 分數接收機制 =====
         window.addEventListener('message', (e) => {
             if (e.data && e.data.type === 'gameScore') {
                 const currentUser = getCurrentUser();
                 if (currentUser) {
+                    // 統一轉為正數處理並紀錄
                     updateScore(e.data.game, currentUser.username, Math.abs(e.data.score));
                 }
             }
         });
 
-        renderUserHeader();
-        renderLeaderboard('2048');
+        // 頁面初始化載入
+        renderUserSection();
+        renderLeaderboard('2048'); // 預設載入 2048 排行榜
     </script>
 </body>
 </html>

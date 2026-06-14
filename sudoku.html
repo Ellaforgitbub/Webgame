@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧩 數獨挑戰</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #121214;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* ===== 頂部資訊 ===== */
+        .info-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-item span {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        /* ===== 數獨棋盤 ===== */
+        #sudoku-board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            width: 100%;
+            max-width: 450px;
+            aspect-ratio: 1;
+            background: #27272a;
+            border: 3px solid #a855f7;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-bottom: 25px;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #e4e4e7;
+            background: #18181b;
+            border: 1px solid #3f3f46;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+
+        /* 3x3 九宮格粗線邊框 */
+        .cell:nth-child(3n) { border-right: 2px solid #71717a; }
+        .cell:nth-child(9n) { border-right: none; }
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid #71717a; }
+
+        /* 狀態樣式 */
+        .cell.original {
+            background: #27272a;
+            color: #a1a1aa;
+            cursor: not-allowed;
+        }
+
+        .cell.selected {
+            background: rgba(168, 85, 247, 0.4) !important;
+        }
+
+        .cell.highlighted {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .cell.wrong {
+            color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        /* ===== 數字鍵盤 ===== */
+        .num-pad {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .num-btn {
+            background: #27272a;
+            color: #fff;
+            border: 1px solid #3f3f46;
+            padding: 15px 0;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .num-btn:hover {
+            background: #a855f7;
+            transform: translateY(-2px);
+        }
+
+        .num-btn.btn-clear {
+            background: #3f3f46;
+            grid-column: span 1;
+        }
+
+        /* ===== 結算彈窗 ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #1e1e24;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid #a855f7;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+        }
+
+        .modal h2 { color: #4ade80; margin-bottom: 15px; font-size: 2rem; }
+        .modal p { color: #a1a1aa; margin-bottom: 25px; font-size: 1.1rem; }
+        
+        .btn-restart {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #fff; border: none; padding: 12px 30px;
+            font-size: 1rem; font-weight: bold; border-radius: 25px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .btn-restart:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    <div class="info-container">
+        <div class="info-item">難度：<span id="diff-txt">普通</span></div>
+        <div class="info-item">時間：<span id="timer">00:00</span></div>
+    </div>
+
+    <div id="sudoku-board"></div>
+
+    <div class="num-pad">
+        <button class="num-btn" data-num="1">1</button>
+        <button class="num-btn" data-num="2">2</button>
+        <button class="num-btn" data-num="3">3</button>
+        <button class="num-btn" data-num="4">4</button>
+        <button class="num-btn" data-num="5">5</button>
+        <button class="num-btn" data-num="6">6</button>
+        <button class="num-btn" data-num="7">7</button>
+        <button class="num-btn" data-num="8">8</button>
+        <button class="num-btn" data-num="9">9</button>
+        <button class="num-btn btn-clear" data-num="0">⌫</button>
+    </div>
+
+    <div id="winModal" class="modal">
+        <div class="modal-content">
+            <h2>🎉 挑戰成功！</h2>
+            <p id="win-msg">你花費了 0 秒完成數獨！</p>
+            <button class="btn-restart" onclick="restartGame()">再玩一局</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== 數獨題目與解答生成器（簡易固定樣板 + 隨機映射法） =====
+        const BASE_SOLUTION = [
+            [5,3,4,6,7,8,9,1,2],
+            [6,7,2,1,9,5,3,4,8],
+            [1,9,8,3,4,2,5,6,7],
+            [8,5,9,7,6,1,4,2,3],
+            [4,2,6,8,5,3,7,9,1],
+            [7,1,3,9,2,4,8,5,6],
+            [9,6,1,5,3,7,2,8,4],
+            [2,8,7,4,1,9,6,3,5],
+            [3,4,5,2,8,6,1,7,9]
+        ];
+
+        let solution = [];
+        let boardState = [];
+        let originalMask = []; 
+
+        let selectedCellIndex = null;
+        let seconds = 0;
+        let timerInterval = null;
+        let gameActive = false;
+
+        const boardEl = document.getElementById('sudoku-board');
+        const timerEl = document.getElementById('timer');
+        const winModal = document.getElementById('winModal');
+
+        // ===== 產生隨機數獨（透過數字變換映射） =====
+        function generateSudoku() {
+            // 創建 1-9 的隨機對應表
+            const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+            const shuffled = [...nums].sort(() => Math.random() - 0.5);
+            const mapping = {};
+            nums.forEach((n, i) => mapping[n] = shuffled[i]);
+
+            // 生成答案
+            solution = BASE_SOLUTION.map(row => row.map(cell => mapping[cell]));
+
+            // 挖空（挖去大約 40 個格子，保留約 41 個提示數，屬於普通難度）
+            boardState = solution.map(row => [...row]);
+            originalMask = Array(9).fill(null).map(() => Array(9).fill(true));
+
+            let holes = 40;
+            while (holes > 0) {
+                const r = Math.floor(Math.random() * 9);
+                const c = Math.floor(Math.random() * 9);
+                if (boardState[r][c] !== 0) {
+                    boardState[r][c] = 0;
+                    originalMask[r][c] = false;
+                    holes--;
+                }
+            }
+        }
+
+        // ===== 渲染棋盤 =====
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    const cellEl = document.createElement('div');
+                    cellEl.classList.add('cell');
+                    const index = r * 9 + c;
+                    cellEl.dataset.index = index;
+
+                    const val = boardState[r][c];
+                    cellEl.textContent = val !== 0 ? val : '';
+
+                    if (originalMask[r][c]) {
+                        cellEl.classList.add('original');
+                    }
+
+                    cellEl.addEventListener('click', () => selectCell(index));
+                    boardEl.appendChild(cellEl);
+                }
+            }
+        }
+
+        // ===== 選擇格子 =====
+        function selectCell(index) {
+            if (!gameActive) return;
+            
+            const r = Math.floor(index / 9);
+            const c = index % 9;
+            if (originalMask[r][c]) return; // 題目原本的數字不可選
+
+            selectedCellIndex = index;
+            
+            // 重新整理樣式
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, i) => {
+                cell.classList.remove('selected', 'highlighted');
+                const cr = Math.floor(i / 9);
+                const cc = i % 9;
+                
+                // 高亮同行、同列
+                if (cr === r || cc === c) {
+                    cell.classList.add('highlighted');
+                }
+            });
+
+            cells[index].classList.add('selected');
+        }
+
+        // ===== 輸入數字 =====
+        function fillNumber(num) {
+            if (selectedCellIndex === null || !gameActive) return;
+
+            const r = Math.floor(selectedCellIndex / 9);
+            const c = selectedCellIndex % 9;
+            
+            boardState[r][c] = num;
+            
+            const cells = document.querySelectorAll('.cell');
+            const targetCell = cells[selectedCellIndex];
+            targetCell.textContent = num !== 0 ? num : '';
+
+            // 實時檢查錯誤
+            if (num !== 0 && num !== solution[r][c]) {
+                targetCell.classList.add('wrong');
+            } else {
+                targetCell.classList.remove('wrong');
+            }
+
+            checkWin();
+        }
+
+        // ===== 檢查是否通關 =====
+        function checkWin() {
+            for (let r = 0; r < 9; r++) {
+                for (let c = 0; c < 9; c++) {
+                    if (boardState[r][c] !== solution[r][c]) {
+                        return; // 只要有一個格子不對，就還沒贏
+                    }
+                }
+            }
+            // 贏了！
+            gameActive = false;
+            clearInterval(timerInterval);
+            document.getElementById('win-msg').textContent = `你花費了 ${seconds} 秒完成數獨挑戰！`;
+            winModal.style.display = 'flex';
+
+            // 【核心回傳機制】傳送分數到大廳 index.html
+            window.parent.postMessage({
+                type: 'gameScore',
+                game: 'sudoku', // 大廳排行榜記得增加此 data-game 標籤
+                score: seconds
+            }, '*');
+        }
+
+        // ===== 計時器 =====
+        function startTimer() {
+            clearInterval(timerInterval);
+            seconds = 0;
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const secs = String(seconds % 60).padStart(2, '0');
+                timerEl.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        // ===== 重新開始 =====
+        function restartGame() {
+            winModal.style.display = 'none';
+            selectedCellIndex = null;
+            gameActive = true;
+            generateSudoku();
+            renderBoard();
+            startTimer();
+        }
+
+        // ===== 事件綁定 =====
+        document.querySelectorAll('.num-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                fillNumber(Number(btn.dataset.num));
+            });
+        });
+
+        // 鍵盤支援
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+            if (e.key >= '1' && e.key <= '9') {
+                fillNumber(Number(e.key));
+            } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+                fillNumber(0);
+            }
+        });
+
+        // 啟動遊戲
+        restartGame();
+    </script>
+</body>
+</html>
